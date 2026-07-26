@@ -68,6 +68,43 @@
   --header-bg: rgb(250 249 246 / 0.82);
   --panel-from: #24244a;
   --panel-to: #14142c;
+  --announce-bg: #1b1b3a;
+  --aura:
+    radial-gradient(46% 46% at 18% 34%, rgb(201 162 75 / 0.16), transparent 70%),
+    radial-gradient(42% 42% at 78% 18%, rgb(44 44 85 / 0.16), transparent 70%);
+}
+
+/* Dark tokens are declared twice on purpose: the media query covers the OS
+   preference before (or without) JS, and the attribute selector — higher
+   specificity, so order-independent — lets an explicit choice win either way. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0b0b12;
+    --bg-2: #10101a;
+    --surface: #14141f;
+    --surface-2: #191926;
+    --surface-inset: #1e1e2d;
+    --text: #eeedf6;
+    --text-muted: #a2a3c0;
+    --text-soft: #7e7fa0;
+    --border: rgb(255 255 255 / 0.1);
+    --border-strong: rgb(255 255 255 / 0.2);
+    --brand: #edecf7;
+    --brand-hover: #ffffff;
+    --on-brand: #14141f;
+    --ring: rgb(201 162 75 / 0.55);
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 14px 32px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 30px 64px rgb(0 0 0 / 0.6);
+    --header-bg: rgb(11 11 18 / 0.78);
+    --panel-from: #1d1d3b;
+    --panel-to: #0d0d18;
+    --announce-bg: #16162c;
+    --aura:
+      radial-gradient(46% 46% at 18% 34%, rgb(201 162 75 / 0.13), transparent 70%),
+      radial-gradient(42% 42% at 78% 18%, rgb(110 110 210 / 0.16), transparent 70%);
+  }
 }
 
 :root[data-theme='dark'] {
@@ -92,6 +129,10 @@
   --header-bg: rgb(11 11 18 / 0.78);
   --panel-from: #1d1d3b;
   --panel-to: #0d0d18;
+  --announce-bg: #16162c;
+  --aura:
+    radial-gradient(46% 46% at 18% 34%, rgb(201 162 75 / 0.13), transparent 70%),
+    radial-gradient(42% 42% at 78% 18%, rgb(110 110 210 / 0.16), transparent 70%);
 }
 
 /* ---------- 2. Base & primitives ---------- */
@@ -276,11 +317,10 @@ button { cursor: pointer; }
 
 /* ---------- 3. Layout chrome ---------- */
 .announce {
-  background: var(--indigo);
+  background: var(--announce-bg);
   color: #e9e7f5;
   font-size: var(--step--1);
 }
-:root[data-theme='dark'] .announce { background: #16162c; }
 .announce[hidden] { display: none; }
 .announce__inner {
   display: flex;
@@ -418,8 +458,13 @@ button { cursor: pointer; }
 .btn--sell { margin-left: 6px; }
 
 .ico--moon { display: none; }
+/* The icon shows the theme currently in effect. */
 :root[data-theme='dark'] .ico--sun { display: none; }
 :root[data-theme='dark'] .ico--moon { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .ico--sun { display: none; }
+  :root:not([data-theme='light']) .ico--moon { display: block; }
+}
 
 .fav-btn { position: relative; }
 .fav-btn__count {
@@ -643,15 +688,8 @@ button { cursor: pointer; }
   inset: -30% -10% auto -10%;
   height: 620px;
   pointer-events: none;
-  background:
-    radial-gradient(46% 46% at 18% 34%, rgb(201 162 75 / 0.16), transparent 70%),
-    radial-gradient(42% 42% at 78% 18%, rgb(44 44 85 / 0.16), transparent 70%);
+  background: var(--aura);
   filter: blur(6px);
-}
-:root[data-theme='dark'] .hero__aura {
-  background:
-    radial-gradient(46% 46% at 18% 34%, rgb(201 162 75 / 0.13), transparent 70%),
-    radial-gradient(42% 42% at 78% 18%, rgb(110 110 210 / 0.16), transparent 70%);
 }
 .hero__grid {
   position: relative;

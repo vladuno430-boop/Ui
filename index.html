@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Castielshop — площадка объявлений нового поколения. Покупайте, продавайте и находите услуги в своём районе за считанные минуты.">
+<meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0b12" media="(prefers-color-scheme: dark)">
+<title>Castielshop — купить и продать рядом с домом</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+
+<script>
+  // Applied before first paint so the correct theme never flashes.
+  (function () {
+    try {
+      var saved = localStorage.getItem('cs-theme');
+      var theme = saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.dataset.theme = theme;
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Перейти к содержимому</a>
+
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.3l-1.2-1.1C6.3 15.2 3.5 12.6 3.5 9.4 3.5 6.9 5.5 5 8 5c1.5 0 2.9.7 3.8 1.8h.4C13.1 5.7 14.5 5 16 5c2.5 0 4.5 1.9 4.5 4.4 0 3.2-2.8 5.8-7.3 9.8z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-4z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5"/><path d="M6.5 10v9h11v-9"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 13.5h6L11 21l8-10.5h-6L13 3z"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9-5.3-2.9-5.3 2.9 1.1-5.9L3.5 9.7l5.9-.8L12 3.5z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+</svg>
+
+<div class="announce" id="announce">
+  <div class="shell announce__inner">
+    <p class="announce__text">
+      <span class="announce__badge">Новое</span>
+      Безопасная сделка с курьерской доставкой теперь во всех 620 городах.
+      <a href="#trust">Как это работает</a>
+    </p>
+    <button class="announce__close" type="button" aria-label="Скрыть объявление" data-dismiss-announce>
+      <svg class="ico" aria-hidden="true"><use href="#i-close"/></svg>
+    </button>
+  </div>
+</div>
+
+<header class="site-header" id="siteHeader">
+  <div class="shell site-header__inner">
+    <a class="brand" href="#" aria-label="Castielshop, на главную">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 26 26" fill="none">
+          <path d="M13 2C13 2 8 8 8 14C8 18.5 10.2 22 13 24C15.8 22 18 18.5 18 14C18 8 13 2 13 2Z" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M13 6C13 6 10.5 9.5 10.5 13.5C10.5 16.5 11.8 19 13 20.5" stroke="var(--accent)" stroke-width="1.2"/>
+        </svg>
+      </span>
+      <span class="brand__word">Castiel<b>shop</b></span>
+    </a>
+
+    <button class="searchtrigger" type="button" data-open-search aria-haspopup="dialog">
+      <svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+      <span class="searchtrigger__label">Найти что угодно — от велосипеда до квартиры</span>
+      <kbd class="searchtrigger__kbd"><span data-mod-key>Ctrl</span> K</kbd>
+    </button>
+
+    <div class="site-header__actions">
+      <button class="ghost-btn ghost-btn--city" type="button" data-city-toggle aria-expanded="false">
+        <svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg>
+        <span class="hide-sm" data-city-label>Москва</span>
+        <svg class="ico ico--xs hide-sm" aria-hidden="true"><use href="#i-chevron"/></svg>
+      </button>
+
+      <button class="ghost-btn ghost-btn--icon" type="button" data-theme-toggle aria-label="Переключить тему">
+        <svg class="ico ico--sun" aria-hidden="true"><use href="#i-sun"/></svg>
+        <svg class="ico ico--moon" aria-hidden="true"><use href="#i-moon"/></svg>
+      </button>
+
+      <a class="ghost-btn ghost-btn--icon fav-btn" href="#feed" aria-label="Избранное">
+        <svg class="ico" aria-hidden="true"><use href="#i-heart"/></svg>
+        <span class="fav-btn__count" data-fav-count hidden>0</span>
+      </a>
+
+      <a class="btn btn--primary btn--sell" href="#sell">
+        <svg class="ico ico--xs" aria-hidden="true"><use href="#i-plus"/></svg>
+        <span>Продать</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="citymenu" data-city-menu hidden>
+    <div class="shell citymenu__inner">
+      <p class="citymenu__title">Ваш город</p>
+      <div class="citymenu__list">
+        <button type="button" data-city>Москва</button>
+        <button type="button" data-city>Санкт-Петербург</button>
+        <button type="button" data-city>Казань</button>
+        <button type="button" data-city>Екатеринбург</button>
+        <button type="button" data-city>Новосибирск</button>
+        <button type="button" data-city>Краснодар</button>
+        <button type="button" data-city>Нижний Новгород</button>
+        <button type="button" data-city>Вся Россия</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="catrail" aria-label="Категории">
+  <div class="shell catrail__shell">
+    <button class="catrail__nav catrail__nav--prev" type="button" aria-label="Прокрутить назад" data-rail-prev>
+      <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg>
+    </button>
+    <div class="catrail__track" data-rail>
+      <button class="catchip is-active" type="button" data-cat="all"><svg class="ico ico--xs" aria-hidden="true"><use href="#i-grid"/></svg>Все категории</button>
+      <button class="catchip" type="button" data-cat="transport">Транспорт</button>
+      <button class="catchip" type="button" data-cat="realty">Недвижимость</button>
+      <button class="catchip" type="button" data-cat="jobs">Работа</button>
+      <button class="catchip" type="button" data-cat="services">Услуги</button>
+      <button class="catchip" type="button" data-cat="personal">Личные вещи</button>
+      <button class="catchip" type="button" data-cat="home">Для дома и дачи</button>
+      <button class="catchip" type="button" data-cat="electronics">Электроника</button>
+      <button class="catchip" type="button" data-cat="hobby">Хобби и отдых</button>
+      <button class="catchip" type="button" data-cat="pets">Животные</button>
+    </div>
+    <button class="catrail__nav catrail__nav--next" type="button" aria-label="Прокрутить вперёд" data-rail-next>
+      <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg>
+    </button>
+  </div>
+</nav>
+
+<main id="main">
+
+  <section class="hero">
+    <div class="hero__aura" aria-hidden="true"></div>
+    <div class="shell hero__grid">
+      <div class="hero__copy reveal">
+        <p class="eyebrow">Локальные объявления</p>
+        <h1 class="hero__title">Найдите нужное <em>рядом с домом.</em></h1>
+        <p class="hero__lede">
+          Castielshop — площадка объявлений нового поколения: покупайте, продавайте
+          и находите услуги в своём районе за считанные минуты.
+        </p>
+
+        <div class="hero__cta">
+          <a class="btn btn--primary btn--lg" href="#sell">
+            <svg class="ico ico--xs" aria-hidden="true"><use href="#i-plus"/></svg>
+            Разместить объявление
+          </a>
+          <button class="btn btn--ghost btn--lg" type="button" data-open-search>
+            <svg class="ico ico--xs" aria-hidden="true"><use href="#i-search"/></svg>
+            Смотреть объявления
+          </button>
+        </div>
+
+        <dl class="stats">
+          <div class="stats__item">
+            <dt><span data-count="4.2" data-decimals="1">0</span>М+</dt>
+            <dd>активных объявлений</dd>
+          </div>
+          <div class="stats__item">
+            <dt><span data-count="620">0</span></dt>
+            <dd>городов</dd>
+          </div>
+          <div class="stats__item">
+            <dt><span data-count="8">0</span> мин</dt>
+            <dd>среднее время сделки</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="hero__visual reveal" aria-hidden="true">
+        <div class="panel">
+          <div class="panel__glow"></div>
+          <svg class="panel__wing" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="wingGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#e7d5a3" stop-opacity=".95"/>
+                <stop offset="100%" stop-color="#e7d5a3" stop-opacity=".15"/>
+              </linearGradient>
+            </defs>
+            <g stroke="url(#wingGrad)" stroke-width="1" fill="none">
+              <path d="M200 40 Q140 90 130 150 Q170 130 200 150 Q230 130 270 150 Q260 90 200 40Z"/>
+              <path d="M200 60 Q160 100 155 150"/>
+              <path d="M200 60 Q240 100 245 150"/>
+              <path d="M200 90 Q170 120 165 155"/>
+              <path d="M200 90 Q230 120 235 155"/>
+              <path d="M200 30 Q120 95 108 175" opacity=".45"/>
+              <path d="M200 30 Q280 95 292 175" opacity=".45"/>
+            </g>
+          </svg>
+
+          <div class="panel__grid"></div>
+
+          <div class="floatcard floatcard--a">
+            <span class="floatcard__dot"></span>
+            <div>
+              <b>Новое объявление</b>
+              <small>Тверская · 40 секунд назад</small>
+            </div>
+          </div>
+
+          <div class="floatcard floatcard--b">
+            <svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg>
+            <div>
+              <b>Продавец проверен</b>
+              <small>Паспорт и телефон</small>
+            </div>
+          </div>
+
+          <div class="ticker" data-ticker>
+            <span class="ticker__label">В эфире</span>
+            <span class="ticker__line" data-ticker-line>Велосипед горный — Москва</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight" aria-label="Популярные категории">
+    <div class="shell">
+      <div class="bento reveal">
+        <a class="bento__cell bento__cell--wide" href="#feed" data-bento="realty">
+          <span class="bento__kicker">Недвижимость</span>
+          <span class="bento__title">Квартиры и дома<br>без комиссии</span>
+          <span class="bento__meta">312 480 объявлений</span>
+          <svg class="bento__art" viewBox="0 0 240 120" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="1.2" opacity=".55">
+              <path d="M20 96V54l30-22 30 22v42z"/><path d="M96 96V64l26-18 26 18v32z"/>
+              <path d="M164 96V44l24-16 24 16v52z"/><path d="M6 96h228"/>
+              <rect x="36" y="66" width="12" height="12"/><rect x="110" y="72" width="10" height="10"/>
+              <rect x="180" y="58" width="10" height="10"/><rect x="180" y="76" width="10" height="10"/>
+            </g>
+          </svg>
+        </a>
+        <a class="bento__cell" href="#feed" data-bento="transport">
+          <span class="bento__kicker">Транспорт</span>
+          <span class="bento__title">Авто с историей<br>проверок</span>
+          <span class="bento__meta">98 210 объявлений</span>
+        </a>
+        <a class="bento__cell" href="#feed" data-bento="electronics">
+          <span class="bento__kicker">Электроника</span>
+          <span class="bento__title">Техника<br>с гарантией</span>
+          <span class="bento__meta">204 770 объявлений</span>
+        </a>
+        <a class="bento__cell bento__cell--accent" href="#feed" data-bento="services">
+          <span class="bento__kicker">Услуги</span>
+          <span class="bento__title">Мастера рядом<br>с вами</span>
+          <span class="bento__meta">Отклик за 12 минут</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="feed">
+    <div class="shell">
+      <div class="section__head reveal">
+        <div>
+          <p class="eyebrow">Подборка</p>
+          <h2 class="section__title">Рекомендуем сегодня</h2>
+        </div>
+        <div class="feedtools">
+          <div class="segmented" role="group" aria-label="Фильтр объявлений">
+            <button type="button" class="is-active" data-filter="all">Все</button>
+            <button type="button" data-filter="verified">Проверенные</button>
+            <button type="button" data-filter="delivery">С доставкой</button>
+            <button type="button" data-filter="fav">Избранное</button>
+          </div>
+          <label class="select">
+            <svg class="ico ico--xs" aria-hidden="true"><use href="#i-sliders"/></svg>
+            <select data-sort aria-label="Сортировка">
+              <option value="new">Сначала новые</option>
+              <option value="cheap">Сначала дешевле</option>
+              <option value="expensive">Сначала дороже</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <p class="feedstate" data-feed-state hidden></p>
+
+      <div class="cards" data-feed aria-live="polite"></div>
+
+      <noscript>
+        <p class="feedstate">Для просмотра ленты объявлений включите JavaScript.</p>
+      </noscript>
+
+      <div class="feedmore">
+        <button class="btn btn--ghost btn--lg" type="button" data-load-more>
+          Показать ещё
+          <svg class="ico ico--xs" aria-hidden="true"><use href="#i-arrow"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--flow" id="how">
+    <div class="shell">
+      <div class="section__head reveal">
+        <div>
+          <p class="eyebrow">Как это работает</p>
+          <h2 class="section__title">Три шага до сделки</h2>
+        </div>
+      </div>
+      <ol class="steps">
+        <li class="steps__item reveal">
+          <span class="steps__num">01</span>
+          <h3>Опишите товар</h3>
+          <p>Загрузите фото — распознавание подставит категорию, характеристики и подскажет справедливую цену по рынку.</p>
+        </li>
+        <li class="steps__item reveal">
+          <span class="steps__num">02</span>
+          <h3>Общайтесь в чате</h3>
+          <p>Покупатели пишут внутри площадки. Номер телефона остаётся скрытым, а история переписки — под рукой.</p>
+        </li>
+        <li class="steps__item reveal">
+          <span class="steps__num">03</span>
+          <h3>Получите деньги</h3>
+          <p>Безопасная сделка держит оплату до подтверждения получения. Курьер или самовывоз — на ваш выбор.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="trust" id="trust">
+    <div class="shell trust__inner">
+      <div class="trust__head reveal">
+        <p class="eyebrow eyebrow--onDark">Почему Castielshop</p>
+        <h2 class="trust__title">Сделка, за которую не тревожно</h2>
+        <p class="trust__lede">Мы убрали из объявлений всё, что заставляет сомневаться: непроверенных продавцов, торг вслепую и переводы «на карту незнакомцу».</p>
+      </div>
+      <div class="trust__grid">
+        <article class="trustcard reveal">
+          <span class="trustcard__icon"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span>
+          <h3>Безопасные сделки</h3>
+          <p>Проверка продавцов и защита платежей на каждом этапе — от первого сообщения до получения товара.</p>
+        </article>
+        <article class="trustcard reveal">
+          <span class="trustcard__icon"><svg class="ico" aria-hidden="true"><use href="#i-chat"/></svg></span>
+          <h3>Чат внутри площадки</h3>
+          <p>Договаривайтесь о встрече и цене прямо в переписке, без передачи личных контактов посторонним.</p>
+        </article>
+        <article class="trustcard reveal">
+          <span class="trustcard__icon"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg></span>
+          <h3>Публикация за 2 минуты</h3>
+          <p>Загрузите фото, укажите цену — и объявление уже видно тысячам покупателей в вашем городе.</p>
+        </article>
+      </div>
+      <div class="trust__strip reveal">
+        <div><b>99,2%</b><span>сделок без спора</span></div>
+        <div><b>1,8 млн</b><span>сообщений в день</span></div>
+        <div><b>4,9</b><span>средняя оценка продавца</span></div>
+        <div><b>24/7</b><span>поддержка в чате</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="sell">
+    <div class="shell">
+      <div class="cta reveal">
+        <div class="cta__copy">
+          <p class="eyebrow">Продавцам</p>
+          <h2 class="cta__title">Первое объявление — за две минуты</h2>
+          <p class="cta__lede">Оставьте почту: пришлём короткий чек-лист продавца и подскажем, как поднять объявление в выдаче без платного продвижения.</p>
+          <form class="signup" data-signup novalidate>
+            <label class="signup__field">
+              <span class="sr-only">Электронная почта</span>
+              <input type="email" name="email" required placeholder="you@example.com" autocomplete="email">
+            </label>
+            <button class="btn btn--primary" type="submit">
+              Получить чек-лист
+              <svg class="ico ico--xs" aria-hidden="true"><use href="#i-arrow"/></svg>
+            </button>
+            <p class="signup__hint" data-signup-hint>Никакого спама — только полезное, не чаще раза в месяц.</p>
+          </form>
+        </div>
+        <ul class="cta__list">
+          <li><svg class="ico ico--xs" aria-hidden="true"><use href="#i-check"/></svg>Бесплатное размещение в большинстве категорий</li>
+          <li><svg class="ico ico--xs" aria-hidden="true"><use href="#i-check"/></svg>Автоподбор цены по похожим объявлениям</li>
+          <li><svg class="ico ico--xs" aria-hidden="true"><use href="#i-check"/></svg>Доставка по всей стране без встреч</li>
+          <li><svg class="ico ico--xs" aria-hidden="true"><use href="#i-check"/></svg>Статистика просмотров и откликов</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="shell">
+    <div class="site-footer__grid">
+      <div class="site-footer__brand">
+        <span class="brand">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 26 26" fill="none">
+              <path d="M13 2C13 2 8 8 8 14C8 18.5 10.2 22 13 24C15.8 22 18 18.5 18 14C18 8 13 2 13 2Z" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M13 6C13 6 10.5 9.5 10.5 13.5C10.5 16.5 11.8 19 13 20.5" stroke="var(--accent)" stroke-width="1.2"/>
+            </svg>
+          </span>
+          <span class="brand__word">Castiel<b>shop</b></span>
+        </span>
+        <p>Площадка объявлений для покупки, продажи и услуг в вашем городе.</p>
+        <div class="site-footer__badges">
+          <span class="pill"><svg class="ico ico--xs" aria-hidden="true"><use href="#i-star"/></svg>4,9 в сторах</span>
+          <span class="pill"><svg class="ico ico--xs" aria-hidden="true"><use href="#i-shield"/></svg>Защита сделок</span>
+        </div>
+      </div>
+      <nav aria-label="Компания">
+        <h3>Компания</h3>
+        <ul><li><a href="#">О нас</a></li><li><a href="#">Вакансии</a></li><li><a href="#">Пресса</a></li><li><a href="#">Блог</a></li></ul>
+      </nav>
+      <nav aria-label="Покупателям">
+        <h3>Покупателям</h3>
+        <ul><li><a href="#">Как купить</a></li><li><a href="#trust">Безопасность</a></li><li><a href="#">Доставка</a></li><li><a href="#">Поддержка</a></li></ul>
+      </nav>
+      <nav aria-label="Продавцам">
+        <h3>Продавцам</h3>
+        <ul><li><a href="#sell">Разместить объявление</a></li><li><a href="#">Тарифы</a></li><li><a href="#">Продвижение</a></li><li><a href="#">Для бизнеса</a></li></ul>
+      </nav>
+    </div>
+    <div class="site-footer__bottom">
+      <span>© 2026 Castielshop. Все права защищены.</span>
+      <span class="site-footer__note">Учебный дизайн-проект · не является реальным сервисом</span>
+    </div>
+  </div>
+</footer>
+
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tabbar__item is-active" href="#main"><svg class="ico" aria-hidden="true"><use href="#i-home"/></svg><span>Главная</span></a>
+  <button class="tabbar__item" type="button" data-open-search><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg><span>Поиск</span></button>
+  <a class="tabbar__item tabbar__item--cta" href="#sell"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg><span>Продать</span></a>
+  <a class="tabbar__item" href="#feed"><svg class="ico" aria-hidden="true"><use href="#i-heart"/></svg><span>Избранное</span></a>
+  <a class="tabbar__item" href="#"><svg class="ico" aria-hidden="true"><use href="#i-user"/></svg><span>Профиль</span></a>
+</nav>
+
+<div class="cmdk" data-search-overlay hidden>
+  <div class="cmdk__scrim" data-close-search></div>
+  <div class="cmdk__panel" role="dialog" aria-modal="true" aria-label="Поиск по объявлениям">
+    <div class="cmdk__field">
+      <svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+      <input type="search" data-search-input placeholder="Что ищем? Например: iPhone, квартира, репетитор" autocomplete="off" spellcheck="false">
+      <button class="cmdk__esc" type="button" data-close-search>Esc</button>
+    </div>
+    <div class="cmdk__body">
+      <p class="cmdk__label">Популярные запросы</p>
+      <div class="cmdk__tags">
+        <button type="button" data-suggest="iPhone">iPhone</button>
+        <button type="button" data-suggest="квартира">квартира</button>
+        <button type="button" data-suggest="велосипед">велосипед</button>
+        <button type="button" data-suggest="репетитор">репетитор</button>
+        <button type="button" data-suggest="диван">диван</button>
+        <button type="button" data-suggest="котят">котята</button>
+      </div>
+      <p class="cmdk__label" data-results-label>Из ленты</p>
+      <ul class="cmdk__results" data-search-results></ul>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" data-toasts aria-live="polite" aria-atomic="false"></div>
+
+<script src="assets/js/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:layout_marginEnd="8dp"
+    android:orientation="vertical"
+    android:background="@drawable/card_map"
+    android:padding="8dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <com.arena3.ui.MapThumbView
+        android:id="@+id/thumb"
+        android:layout_width="match_parent"
+        android:layout_height="56dp" />
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="@color/text"
+        android:textSize="11sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:letterSpacing="0.08" />
+
+    <TextView
+        android:id="@+id/sub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_dim"
+        android:textSize="9sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+</LinearLayout>

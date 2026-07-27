@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ARENA 3</string>
+    <string name="tagline">ARENA COMBAT</string>
+
+    <string name="fight">FIGHT</string>
+    <string name="settings">SETTINGS</string>
+    <string name="back">BACK</string>
+    <string name="resume">RESUME</string>
+    <string name="restart">RESTART MATCH</string>
+    <string name="quit_match">LEAVE MATCH</string>
+
+    <string name="arena">ARENA</string>
+    <string name="opponents">OPPONENTS</string>
+    <string name="skill">SKILL</string>
+    <string name="frag_limit">FRAG LIMIT</string>
+    <string name="time_limit">TIME LIMIT</string>
+
+    <string name="look_sensitivity">LOOK SENSITIVITY</string>
+    <string name="field_of_view">FIELD OF VIEW</string>
+    <string name="control_scale">CONTROL SIZE</string>
+    <string name="invert_look">INVERT LOOK</string>
+    <string name="auto_switch">AUTO-SWITCH WEAPONS</string>
+    <string name="show_fps">SHOW FPS</string>
+    <string name="gore">GIBS AND BLOOD</string>
+    <string name="sound">SOUND</string>
+    <string name="music">MENU AMBIENCE</string>
+    <string name="haptics">HAPTIC FEEDBACK</string>
+    <string name="southpaw">SOUTHPAW LAYOUT</string>
+    <string name="gyro_aim">SHOW TOUCH ZONES</string>
+
+    <string name="about_body">An original arena shooter built from scratch: brush-based
+        levels, Quake-style movement physics with strafe jumping and rocket jumps,
+        nine weapons and waypoint-navigating bots. All geometry, textures and sounds
+        are generated procedurally at runtime — no external game assets are used.</string>
+</resources>

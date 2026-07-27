@@ -1,0 +1,43 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.arena3'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.arena3"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            // Signed with the debug key by default so `assembleRelease` produces an
+            // installable APK without extra setup. Replace for a real store build.
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packagingOptions {
+        // The game ships no binary assets; everything is generated at runtime.
+        resources.excludes += ['META-INF/*']
+    }
+}
+
+// No third-party dependencies: engine, renderer, audio and UI are all hand-written
+// against the platform SDK.
+dependencies {
+}

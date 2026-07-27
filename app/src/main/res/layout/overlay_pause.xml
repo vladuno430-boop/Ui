@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#CC05070A"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:background="@drawable/bg_panel"
+        android:padding="22dp">
+
+        <TextView
+            android:id="@+id/pause_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="PAUSED"
+            android:textColor="@color/accent"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.25"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/pause_sub"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:textColor="@color/text_dim"
+            android:textSize="11sp"
+            android:gravity="center" />
+
+        <Button
+            android:id="@+id/btn_resume"
+            android:layout_width="240dp"
+            android:layout_height="48dp"
+            android:text="@string/resume"
+            android:textColor="#FF120C02"
+            android:textStyle="bold"
+            android:background="@drawable/btn_primary"
+            android:stateListAnimator="@null" />
+
+        <Button
+            android:id="@+id/btn_restart"
+            android:layout_width="240dp"
+            android:layout_height="42dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/restart"
+            android:textColor="@color/text"
+            android:background="@drawable/btn_secondary"
+            android:stateListAnimator="@null" />
+
+        <Button
+            android:id="@+id/btn_leave"
+            android:layout_width="240dp"
+            android:layout_height="42dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/quit_match"
+            android:textColor="@color/text"
+            android:background="@drawable/btn_secondary"
+            android:stateListAnimator="@null" />
+    </LinearLayout>
+</FrameLayout>

@@ -5,6 +5,7 @@ import com.arena3.game.Contents;
 import com.arena3.game.GameConfig;
 import com.arena3.game.GameEvent;
 import com.arena3.game.GameWorld;
+import com.arena3.game.ItemDef;
 import com.arena3.game.ItemEntity;
 import com.arena3.game.MapBuilder;
 import com.arena3.game.MapDef;
@@ -15,6 +16,13 @@ import com.arena3.game.PlayerState;
 import com.arena3.game.Tex;
 import com.arena3.game.Trace;
 import com.arena3.game.WeaponDef;
+import com.arena3.render.FighterPose;
+import com.arena3.render.MeshBuilder;
+import com.arena3.render.Models;
+import com.arena3.render.ParticleSystem;
+import com.arena3.render.ProcTex;
+import com.arena3.render.WorldGeometry;
+import com.arena3.core.Mat4;
 
 import java.util.Locale;
 
@@ -36,6 +44,7 @@ public final class HeadlessTest {
         testStrafeJumping();
         testStairsAndSlopes();
         for (int i = 0; i < Maps.COUNT; i++) testMap(i);
+        testRenderData();
         testMatch();
 
         System.out.println();
@@ -334,6 +343,128 @@ public final class HeadlessTest {
         }
         check("every jump pad lands its rider (" + bad + " fatal, " + wild + " off-target)",
                 bad == 0 && wild == 0);
+    }
+
+    // ------------------------------------------------------------- render data
+
+    /**
+     * The renderer's inputs are all generated, so a bad number here shows up as
+     * an invisible or corrupted world on the device with nothing to inspect.
+     */
+    private static void testRenderData() {
+        System.out.println("Render data");
+
+        // Textures: every slot must be generated and have some variation in it.
+        int flat = 0;
+        for (int i = 0; i < Tex.COUNT; i++) {
+            int[] px = ProcTex.generate(i);
+            if (px.length != ProcTex.SIZE * ProcTex.SIZE) {
+                check("texture " + i + " is the right size", false);
+                return;
+            }
+            int min = 0xFFFFFF, max = 0;
+            for (int p : px) {
+                int lum = ((p >> 16) & 0xFF) + ((p >> 8) & 0xFF) + (p & 0xFF);
+                min = Math.min(min, lum);
+                max = Math.max(max, lum);
+            }
+            // The sky slot is deliberately a flat colour; nothing else should be.
+            if (max - min < 12 && i != Tex.SKY) flat++;
+        }
+        check("all textures generate with detail (" + flat + " flat)", flat == 0);
+
+        // World geometry for each arena.
+        for (int m = 0; m < Maps.COUNT; m++) {
+            MapDef map = Maps.build(m);
+            CollisionWorld cw = new CollisionWorld();
+            cw.build(map.brushes);
+            long t0 = System.nanoTime();
+            WorldGeometry geo = new WorldGeometry();
+            geo.build(map, cw);
+            long ms = (System.nanoTime() - t0) / 1_000_000;
+
+            boolean finite = true;
+            float maxLight = 0f;
+            for (int i = 0; i < geo.vertexCount * WorldGeometry.VERTEX_FLOATS; i++) {
+                float v = geo.verts[i];
+                if (Float.isNaN(v) || Float.isInfinite(v)) finite = false;
+            }
+            for (int i = 0; i < geo.vertexCount; i++) {
+                int o = i * WorldGeometry.VERTEX_FLOATS;
+                maxLight = Math.max(maxLight, geo.verts[o + 8]);
+            }
+            boolean indicesValid = true;
+            for (int i = 0; i < geo.indexCount; i++) {
+                if (geo.indices[i] < 0 || geo.indices[i] >= geo.vertexCount) indicesValid = false;
+            }
+            System.out.printf("  %-10s %6d verts %6d tris  baked %3d ms%n",
+                    Maps.nameOf(m), geo.vertexCount, geo.triangleCount(), ms);
+            check("  geometry is finite", finite);
+            check("  indices are in range", indicesValid);
+            check("  geometry is non-trivial", geo.triangleCount() > 500);
+            check("  lighting stays in range", maxLight > 0.05f && maxLight <= 2.3f);
+            check("  bake is fast enough", ms < 3000);
+        }
+
+        // Models: every mesh must build with usable geometry.
+        int emptyMeshes = 0;
+        MeshBuilder.MeshData[] parts = Models.fighter(0.9f, 0.6f, 0.2f);
+        for (MeshBuilder.MeshData d : parts) if (d.indexCount < 6) emptyMeshes++;
+        for (int w = 0; w < WeaponDef.COUNT; w++) {
+            if (Models.weapon(w).indexCount < 6) emptyMeshes++;
+            if (Models.projectile(w).indexCount < 6) emptyMeshes++;
+        }
+        for (int i = 0; i < ItemDef.ALL.length; i++) {
+            if (Models.item(i).indexCount < 6) emptyMeshes++;
+        }
+        check("every model builds (" + emptyMeshes + " empty)", emptyMeshes == 0);
+
+        // Posing must produce finite matrices for the living and the dead alike.
+        PlayerState ps = new PlayerState();
+        ps.resetForSpawn();
+        ps.origin.set(100, 200, 30);
+        ps.velocity.set(250, 0, 0);
+        ps.onGround = true;
+        ps.bobCycle = 1.7f;
+        Mat4[] pose = FighterPose.allocate();
+        boolean poseOk = true;
+        for (int pass = 0; pass < 2; pass++) {
+            ps.alive = pass == 0;
+            ps.deathTime = pass == 0 ? 0f : 0.8f;
+            FighterPose.compute(ps, pose);
+            for (Mat4 mat : pose) {
+                for (float v : mat.m) {
+                    if (Float.isNaN(v) || Float.isInfinite(v)) poseOk = false;
+                }
+            }
+        }
+        check("fighter posing is finite", poseOk);
+
+        // Particles: fill the pool hard, then make sure it drains and builds.
+        ParticleSystem fx = new ParticleSystem();
+        Vec3 at = new Vec3(0, 0, 0);
+        Vec3 dir = new Vec3(0, 0, 1);
+        for (int i = 0; i < 300; i++) {
+            fx.explosion(at, 120f, 1.6f, 0.9f, 0.4f);
+            fx.bulletImpact(at, dir);
+            fx.blood(at, dir, 40);
+            fx.railTrail(at, new Vec3(900, 0, 0), 1f, 0.6f, 1.6f);
+        }
+        check("particle pool holds its cap", fx.liveParticles() <= ParticleSystem.MAX_PARTICLES);
+        check("beam pool holds its cap", fx.beams() <= ParticleSystem.MAX_BEAMS);
+
+        float[] scratch = new float[1400 * 4 * ParticleSystem.VERTEX_FLOATS];
+        Vec3 camRight = new Vec3(0, 1, 0), camUp = new Vec3(0, 0, 1);
+        int quads = fx.buildQuads(scratch, 1400, camRight, camUp, true);
+        boolean quadsFinite = true;
+        for (int i = 0; i < quads * 4 * ParticleSystem.VERTEX_FLOATS; i++) {
+            if (Float.isNaN(scratch[i]) || Float.isInfinite(scratch[i])) quadsFinite = false;
+        }
+        check("particle geometry is finite (" + quads + " quads)", quadsFinite && quads > 0);
+
+        for (int i = 0; i < 400; i++) fx.update(1f / 60f, null);
+        check("particles expire", fx.liveParticles() == 0);
+        System.out.println();
     }
 
     // -------------------------------------------------------------- match tests

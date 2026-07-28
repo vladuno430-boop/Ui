@@ -53,8 +53,8 @@ public final class Maps {
 
     private static MapDef forge() {
         MapBuilder b = new MapBuilder("forge", nameOf(0), subtitleOf(0), descriptionOf(0));
-        b.ambient(0.17f, 0.16f, 0.19f)
-                .sun(-0.4f, -0.3f, -0.87f, 0.16f, 0.16f, 0.20f)
+        b.ambient(0.085f, 0.082f, 0.105f)
+                .sun(-0.4f, -0.3f, -0.87f, 0.10f, 0.10f, 0.13f)
                 .fog(0.05f, 0.045f, 0.06f, 1600f, 4200f)
                 .skyStyle(1)
                 .killZ(-800f);
@@ -113,14 +113,19 @@ public final class Maps {
         b.teleporter(-816f, -816f, RING_Z, 640f, -640f, 24f, 135f);
 
         // --- lighting ---
-        b.lamp(-448f, -448f, CEIL - 8f, 700f, 1.0f);
-        b.lamp(448f, -448f, CEIL - 8f, 700f, 1.0f);
-        b.lamp(-448f, 448f, CEIL - 8f, 700f, 1.0f);
-        b.lamp(448f, 448f, CEIL - 8f, 700f, 0.8f);
-        b.lamp(0f, 0f, CEIL - 8f, 820f, 1.2f);
-        b.light(0f, 0f, 220f, 420f, 0.5f, 0.55f, 0.7f, 1.0f);
-        b.light(-816f, 0f, RING_Z + 120f, 400f, 0.6f, 0.9f, 0.8f, 0.6f);
-        b.light(816f, 0f, RING_Z + 120f, 400f, 0.6f, 0.9f, 0.8f, 0.6f);
+        b.lamp(-448f, -448f, CEIL - 8f, 900f, 2.3f);
+        b.lamp(448f, -448f, CEIL - 8f, 900f, 2.3f);
+        b.lamp(-448f, 448f, CEIL - 8f, 900f, 2.3f);
+        b.lamp(448f, 448f, CEIL - 8f, 900f, 1.8f);
+        b.lamp(0f, 0f, CEIL - 8f, 1000f, 2.6f);
+        b.lamp(-816f, -400f, CEIL - 8f, 700f, 1.6f);
+        b.lamp(816f, 400f, CEIL - 8f, 700f, 1.6f);
+        // Cold fill from the balcony strips, to set off the warm lamps.
+        b.light(0f, 0f, 240f, 620f, 1.1f, 0.42f, 0.58f, 1.0f);
+        b.light(-816f, 0f, RING_Z + 90f, 520f, 1.3f, 0.55f, 0.72f, 1.0f);
+        b.light(816f, 0f, RING_Z + 90f, 520f, 1.3f, 0.55f, 0.72f, 1.0f);
+        b.light(0f, -816f, RING_Z + 90f, 520f, 1.1f, 0.55f, 0.72f, 1.0f);
+        b.light(0f, 816f, RING_Z + 90f, 520f, 1.1f, 0.55f, 0.72f, 1.0f);
 
         // --- items ---
         b.item(ItemDef.POWERUP_QUAD, 0f, 0f, 168f);
@@ -163,8 +168,8 @@ public final class Maps {
 
     private static MapDef crucible() {
         MapBuilder b = new MapBuilder("crucible", nameOf(1), subtitleOf(1), descriptionOf(1));
-        b.ambient(0.20f, 0.20f, 0.26f)
-                .sun(-0.45f, -0.25f, -0.85f, 0.34f, 0.32f, 0.30f)
+        b.ambient(0.115f, 0.125f, 0.165f)
+                .sun(-0.45f, -0.25f, -0.85f, 0.30f, 0.29f, 0.27f)
                 .fog(0.09f, 0.10f, 0.13f, 2200f, 6000f)
                 .skyStyle(0)
                 .killZ(-900f);
@@ -200,7 +205,7 @@ public final class Maps {
             b.pillar(cx + 288f, -288f, 320f, 520f, 28f, Tex.CONCRETE);
             b.pillar(cx - 288f, 288f, 320f, 520f, 28f, Tex.CONCRETE);
             b.pillar(cx + 288f, 288f, 320f, 520f, 28f, Tex.CONCRETE);
-            b.light(cx, 0f, 520f, 900f, 1.0f, 1.0f, 0.85f, 0.62f);
+            b.light(cx, 0f, 500f, 1000f, 2.4f, 1.0f, 0.84f, 0.58f);
         }
 
         // --- bridge joining the two tower decks ---
@@ -223,10 +228,12 @@ public final class Maps {
         b.teleporter(1160f, -780f, 0f, -1080f, 700f, 24f, -45f);
 
         // --- lighting ---
-        b.lamp(0f, -HY + 200f, TOP - 40f, 900f, 0.9f);
-        b.lamp(0f, HY - 200f, TOP - 40f, 900f, 0.9f);
-        b.light(0f, 0f, 560f, 1200f, 0.8f, 0.8f, 0.85f, 1.0f);
-        b.light(0f, 0f, -60f, 620f, 0.7f, 1.0f, 0.6f, 0.3f);
+        b.lamp(0f, -HY + 200f, TOP - 40f, 1000f, 2.0f);
+        b.lamp(0f, HY - 200f, TOP - 40f, 1000f, 2.0f);
+        b.light(0f, 0f, 540f, 1400f, 1.4f, 0.62f, 0.72f, 1.0f);
+        b.light(0f, 0f, -40f, 700f, 1.8f, 1.0f, 0.55f, 0.25f);
+        b.light(-900f, -848f, 300f, 700f, 1.2f, 0.95f, 0.8f, 0.6f);
+        b.light(900f, 848f, 300f, 700f, 1.2f, 0.95f, 0.8f, 0.6f);
 
         // --- items ---
         b.item(ItemDef.WEAPON_ROCKET, 0f, 0f, -104f);
@@ -274,8 +281,8 @@ public final class Maps {
 
     private static MapDef theVoid() {
         MapBuilder b = new MapBuilder("void", nameOf(2), subtitleOf(2), descriptionOf(2));
-        b.ambient(0.13f, 0.14f, 0.20f)
-                .sun(0.2f, -0.4f, -0.89f, 0.26f, 0.26f, 0.34f)
+        b.ambient(0.075f, 0.08f, 0.125f)
+                .sun(0.2f, -0.4f, -0.89f, 0.20f, 0.20f, 0.28f)
                 .fog(0.02f, 0.02f, 0.04f, 3000f, 9000f)
                 .skyStyle(2)
                 .killZ(-700f);
@@ -287,7 +294,7 @@ public final class Maps {
         b.pillar(272f, -272f, 0f, 176f, 32f, Tex.WALL_TECH);
         b.pillar(-272f, 272f, 0f, 176f, 32f, Tex.WALL_TECH);
         b.pillar(272f, 272f, 0f, 176f, 32f, Tex.WALL_TECH);
-        b.light(0f, 0f, 220f, 700f, 1.0f, 0.75f, 0.85f, 1.0f);
+        b.light(0f, 0f, 220f, 900f, 2.2f, 0.72f, 0.84f, 1.0f);
 
         // Four outer platforms, alternating heights.
         float[][] outer = {
@@ -297,7 +304,7 @@ public final class Maps {
             float cx = p[0], cy = p[1], cz = p[2];
             b.solid(cx - 256f, cy - 256f, cz - 64f, cx + 256f, cy + 256f, cz, Tex.FLOOR_METAL, 96f);
             b.decor(cx - 264f, cy - 264f, cz - 12f, cx + 264f, cy + 264f, cz, Tex.TRIM);
-            b.light(cx, cy, cz + 200f, 560f, 0.85f, 1.0f, 0.88f, 0.7f);
+            b.light(cx, cy, cz + 190f, 700f, 2.0f, 1.0f, 0.86f, 0.66f);
         }
 
         // Diagonal stepping stones — reachable with a good strafe jump.
@@ -306,7 +313,7 @@ public final class Maps {
         };
         for (float[] p : steps) {
             b.solid(p[0] - 176f, p[1] - 176f, p[2] - 32f, p[0] + 176f, p[1] + 176f, p[2], Tex.CONCRETE, 96f);
-            b.light(p[0], p[1], p[2] + 140f, 320f, 0.6f, 0.8f, 0.8f, 1.0f);
+            b.light(p[0], p[1], p[2] + 150f, 460f, 1.7f, 0.72f, 0.8f, 1.0f);
         }
 
         // A high sniper deck over the centre, reached by a pad.

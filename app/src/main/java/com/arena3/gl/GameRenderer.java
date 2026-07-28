@@ -75,6 +75,9 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
     private final Mat4 projection = new Mat4();
     private final Mat4 viewProj = new Mat4();
     private final Mat4 model = new Mat4();
+    private final Mat4 gunProj = new Mat4();
+    private final Mat4 gunView = new Mat4();
+    private final Mat4 gunVp = new Mat4();
     private float viewRoll;
     private float landDip;
     private float damageKick;
@@ -700,9 +703,9 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         GLES30.glClear(GLES30.GL_DEPTH_BUFFER_BIT);
 
         float aspect = viewWidth / (float) viewHeight;
-        Mat4 gunProj = new Mat4().perspective(verticalFov(GUN_FOV, aspect), aspect, 1f, 400f);
-        Mat4 gunView = new Mat4().view(eye, forward, right, up);
-        Mat4 gunVp = new Mat4().setMul(gunProj, gunView);
+        gunProj.perspective(verticalFov(GUN_FOV, aspect), aspect, 1f, 400f);
+        gunView.view(eye, forward, right, up);
+        gunVp.setMul(gunProj, gunView);
 
         modelProgram.use();
         modelProgram.setMatrix("uViewProj", gunVp.m);

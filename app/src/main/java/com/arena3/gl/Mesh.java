@@ -63,8 +63,13 @@ public final class Mesh {
         }
     }
 
-    /** Uploads static geometry. */
+    /** Uploads static geometry. Empty uploads are legal and draw nothing. */
     public void upload(float[] verts, int vertFloats, int[] indices, int indexCount) {
+        if (vertFloats <= 0) {
+            this.vertexCount = 0;
+            this.indexCount = 0;
+            return;
+        }
         GLES30.glBindVertexArray(vao);
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vbo);
         FloatBuffer fb = ByteBuffer.allocateDirect(vertFloats * 4).order(ByteOrder.nativeOrder())

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Boxy sedan silhouette, three-quarter, sized for the adaptive-icon safe zone. -->
+    <path
+        android:fillColor="#FF2E78"
+        android:pathData="M28,62 L34,53 L52,50 L74,50 L86,55 L90,62 L90,68 L28,68 Z" />
+    <path
+        android:fillColor="#29E6FF"
+        android:pathData="M38,54 L53,52 L71,52 L80,55 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,68 m-6,0 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M78,68 m-6,0 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 Z" />
+</vector>

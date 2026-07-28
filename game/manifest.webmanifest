@@ -1,0 +1,20 @@
+{
+  "name": "X71 Night Run — Mark II Drift",
+  "short_name": "X71 Night Run",
+  "description": "Night drifting in a Toyota Mark II X71 across city streets, dockyards and a mountain pass.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#06060b",
+  "theme_color": "#08070d",
+  "categories": ["games"],
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

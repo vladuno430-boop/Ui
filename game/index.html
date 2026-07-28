@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
+<meta name="theme-color" content="#08070d">
+<meta name="description" content="Night drifting in a Toyota Mark II X71 — city streets, mountain passes and dockyards, with a real tire model under the slide.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>X71 NIGHT RUN — Mark II Drift</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon.svg">
+<link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="gl" aria-label="Game view"></canvas>
+
+  <!-- ------------------------------------------------------------- HUD -- -->
+  <div id="hud" class="hud" hidden>
+    <div class="hud__top">
+      <div class="hud__score">
+        <div class="hud__score-total"><span id="hud-score">0</span></div>
+        <div class="hud__score-pending">
+          <span id="hud-pending">+0</span>
+          <span class="hud__mult" id="hud-mult">×1.0</span>
+        </div>
+        <div class="hud__bank" id="hud-bank"></div>
+      </div>
+      <div class="hud__objective">
+        <div class="hud__timer" id="hud-timer">00:00.000</div>
+        <div class="hud__goal" id="hud-goal"></div>
+        <div class="hud__meta">
+          <span id="hud-clock">22:30</span>
+          <span id="hud-weather">Clear</span>
+          <span id="hud-track"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud__angle">
+      <div class="angle-meter">
+        <div class="angle-meter__zone"></div>
+        <div class="angle-meter__needle" id="angle-needle"></div>
+      </div>
+      <div class="angle-meter__label"><span id="hud-angle">0</span>°</div>
+    </div>
+
+    <div class="hud__flash" id="hud-flash"></div>
+
+    <div class="hud__cluster">
+      <div class="cluster__tacho">
+        <div class="cluster__bar" id="tacho-bar"></div>
+        <div class="cluster__redline"></div>
+      </div>
+      <div class="cluster__readout">
+        <div class="cluster__speed"><span id="hud-speed">0</span><small id="hud-unit">km/h</small></div>
+        <div class="cluster__gear" id="hud-gear">N</div>
+      </div>
+      <div class="cluster__row">
+        <span class="chip">BOOST <b id="hud-boost">0.00</b></span>
+        <span class="chip">RPM <b id="hud-rpm">850</b></span>
+        <span class="chip" id="hud-tyres">TYRE <b>—</b></span>
+      </div>
+    </div>
+
+    <div class="hud__music" id="hud-music"></div>
+  </div>
+
+  <!-- -------------------------------------------------- touch controls -- -->
+  <div id="touch" class="touch" hidden>
+    <div class="touch__steer" id="ctrl-steer">
+      <div class="touch__steer-track"><div class="touch__steer-knob" id="steer-knob"></div></div>
+      <span class="touch__hint">steer</span>
+    </div>
+    <div class="touch__right">
+      <div class="touch__col">
+        <button class="pedal pedal--clutch" id="ctrl-clutch" type="button" aria-label="Clutch">CL</button>
+        <button class="pedal pedal--hand" id="ctrl-handbrake" type="button" aria-label="Handbrake">
+          <span>E-BRAKE</span>
+        </button>
+      </div>
+      <div class="touch__col">
+        <button class="pedal pedal--brake" id="ctrl-brake" type="button" aria-label="Brake">BRAKE</button>
+        <button class="pedal pedal--throttle" id="ctrl-throttle" type="button" aria-label="Throttle">GAS</button>
+      </div>
+    </div>
+    <div class="touch__gears">
+      <button class="mini" id="ctrl-up" type="button" aria-label="Shift up">▲</button>
+      <button class="mini" id="ctrl-down" type="button" aria-label="Shift down">▼</button>
+    </div>
+    <div class="touch__util">
+      <button class="mini" id="ctrl-camera" type="button" aria-label="Change camera">CAM</button>
+      <button class="mini" id="ctrl-reset" type="button" aria-label="Reset car">RESET</button>
+      <button class="mini" id="ctrl-pause" type="button" aria-label="Pause">II</button>
+    </div>
+  </div>
+
+  <!-- ----------------------------------------------------------- menus -- -->
+  <div id="ui" class="ui">
+
+    <section class="screen screen--loading is-active" id="screen-loading">
+      <div class="loader">
+        <div class="loader__logo">X71<span>NIGHT RUN</span></div>
+        <div class="loader__bar"><i id="load-bar"></i></div>
+        <p class="loader__status" id="load-status">Booting…</p>
+      </div>
+    </section>
+
+    <section class="screen screen--title" id="screen-title">
+      <header class="title">
+        <p class="title__jp">マークII X71 ドリフト</p>
+        <h1 class="title__main">X71 <span>NIGHT RUN</span></h1>
+        <p class="title__sub">Toyota Mark II X71 · 1988 · rear wheel drive</p>
+      </header>
+      <nav class="menu" id="main-menu">
+        <button class="menu__item" data-action="career">
+          <b>Career</b><small>Work through the night, event by event</small>
+        </button>
+        <button class="menu__item" data-action="free">
+          <b>Free drift</b><small>Any track, any weather, any hour</small>
+        </button>
+        <button class="menu__item" data-action="garage">
+          <b>Garage</b><small>Build it, set it up, paint it</small>
+        </button>
+        <button class="menu__item" data-action="boards">
+          <b>Leaderboards</b><small>Compete and chase ghosts</small>
+        </button>
+        <button class="menu__item" data-action="settings">
+          <b>Settings</b><small>Controls, quality, audio</small>
+        </button>
+      </nav>
+      <footer class="title__footer">
+        <span id="title-profile"></span>
+        <span id="title-build"></span>
+      </footer>
+    </section>
+
+    <section class="screen screen--list" id="screen-career">
+      <header class="bar">
+        <button class="back" data-nav="title" type="button">← Back</button>
+        <h2>Career</h2>
+        <span class="bar__meta" id="career-progress"></span>
+      </header>
+      <div class="scroll" id="career-list"></div>
+    </section>
+
+    <section class="screen screen--list" id="screen-free">
+      <header class="bar">
+        <button class="back" data-nav="title" type="button">← Back</button>
+        <h2>Free drift</h2>
+      </header>
+      <div class="scroll">
+        <div class="track-grid" id="track-grid"></div>
+        <div class="panel">
+          <h3>Conditions</h3>
+          <label class="field">
+            <span>Time of day <b id="free-hour-label">22:30</b></span>
+            <input type="range" id="free-hour" min="0" max="23.75" step="0.25" value="22.5">
+          </label>
+          <label class="field">
+            <span>Clock speed <b id="free-timescale-label">frozen</b></span>
+            <input type="range" id="free-timescale" min="0" max="2" step="0.05" value="0">
+          </label>
+          <div class="field">
+            <span>Weather</span>
+            <div class="chips" id="free-weather"></div>
+          </div>
+          <label class="field">
+            <span>Session length <b id="free-duration-label">no limit</b></span>
+            <input type="range" id="free-duration" min="0" max="600" step="30" value="0">
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="free-ghost"> <span>Race my best ghost</span>
+          </label>
+        </div>
+        <button class="primary" id="free-start" type="button">Drive</button>
+      </div>
+    </section>
+
+    <section class="screen screen--garage" id="screen-garage">
+      <header class="bar">
+        <button class="back" data-nav="title" type="button">← Back</button>
+        <h2>Garage</h2>
+        <span class="bar__meta"><b id="garage-credits">0</b> CR</span>
+      </header>
+      <div class="garage">
+        <div class="garage__stats" id="garage-stats"></div>
+        <div class="garage__tabs" role="tablist">
+          <button class="tab is-active" data-tab="parts" type="button">Parts</button>
+          <button class="tab" data-tab="setup" type="button">Setup</button>
+          <button class="tab" data-tab="style" type="button">Style</button>
+        </div>
+        <div class="garage__panel scroll" id="garage-panel"></div>
+      </div>
+    </section>
+
+    <section class="screen screen--list" id="screen-boards">
+      <header class="bar">
+        <button class="back" data-nav="title" type="button">← Back</button>
+        <h2>Leaderboards</h2>
+        <span class="bar__meta" id="board-source"></span>
+      </header>
+      <div class="scroll">
+        <div class="chips" id="board-tracks"></div>
+        <ol class="board" id="board-list"></ol>
+        <div class="panel">
+          <h3>Online</h3>
+          <p class="muted">
+            The game ships without a server. Point it at your own endpoint to
+            compete beyond this device — the API is three routes, documented in
+            <code>docs/ONLINE.md</code>.
+          </p>
+          <label class="field">
+            <span>Endpoint URL</span>
+            <input type="url" id="board-endpoint" placeholder="https://example.com/api">
+          </label>
+          <div class="row">
+            <button class="secondary" id="board-save-endpoint" type="button">Connect</button>
+            <button class="secondary" id="board-clear-endpoint" type="button">Disconnect</button>
+          </div>
+          <label class="field">
+            <span>Driver name</span>
+            <input type="text" id="board-name" maxlength="14" placeholder="NO NAME">
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen screen--list" id="screen-settings">
+      <header class="bar">
+        <button class="back" data-nav="title" type="button">← Back</button>
+        <h2>Settings</h2>
+      </header>
+      <div class="scroll" id="settings-panel"></div>
+    </section>
+
+    <section class="screen screen--overlay" id="screen-pause">
+      <div class="dialog">
+        <h2>Paused</h2>
+        <div class="dialog__stats" id="pause-stats"></div>
+        <button class="primary" data-action="resume" type="button">Resume</button>
+        <button class="secondary" data-action="restart" type="button">Restart run</button>
+        <button class="secondary" data-action="camera" type="button">Change camera</button>
+        <button class="secondary" data-action="quit" type="button">Back to menu</button>
+      </div>
+    </section>
+
+    <section class="screen screen--overlay" id="screen-results">
+      <div class="dialog dialog--wide">
+        <p class="dialog__kicker" id="result-kicker">Run complete</p>
+        <h2 id="result-title">Free drift</h2>
+        <div class="result__score"><span id="result-score">0</span><small>points</small></div>
+        <div class="result__stars" id="result-stars"></div>
+        <div class="result__grid" id="result-grid"></div>
+        <div class="result__row">
+          <button class="primary" data-action="again" type="button">Run again</button>
+          <button class="secondary" data-action="garage" type="button">Garage</button>
+          <button class="secondary" data-action="menu" type="button">Menu</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen screen--overlay" id="screen-error">
+      <div class="dialog">
+        <h2 id="error-title">Cannot start</h2>
+        <p id="error-body" class="muted"></p>
+      </div>
+    </section>
+
+    <div class="toast" id="toast" hidden></div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+<noscript>
+  <p style="color:#fff;padding:2rem;font-family:system-ui">
+    This game needs JavaScript and WebGL 2.
+  </p>
+</noscript>
+</body>
+</html>

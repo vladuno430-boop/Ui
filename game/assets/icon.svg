@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="X71 Night Run">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#12061f"/>
+      <stop offset="1" stop-color="#2a0a2e"/>
+    </linearGradient>
+    <linearGradient id="neon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff2e78"/>
+      <stop offset="1" stop-color="#29e6ff"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#sky)"/>
+  <circle cx="256" cy="300" r="190" fill="#ff2e78" opacity="0.12"/>
+
+  <!-- horizon grid -->
+  <g stroke="#29e6ff" stroke-opacity="0.35" stroke-width="3">
+    <path d="M0 340 H512"/>
+    <path d="M256 340 L-40 512"/><path d="M256 340 L120 512"/>
+    <path d="M256 340 L256 512"/><path d="M256 340 L392 512"/>
+    <path d="M256 340 L552 512"/>
+    <path d="M0 396 H512"/><path d="M0 448 H512"/>
+  </g>
+
+  <!-- boxy sedan silhouette, three-quarter -->
+  <g filter="url(#glow)">
+    <path d="M96 300 L128 258 L214 244 L318 246 L392 268 L416 300 L414 330 L96 330 Z"
+          fill="#0d0a16" stroke="url(#neon)" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M150 262 L216 252 L306 254 L356 270 Z" fill="#29e6ff" fill-opacity="0.25"/>
+    <circle cx="168" cy="332" r="30" fill="#0d0a16" stroke="#ff2e78" stroke-width="7"/>
+    <circle cx="352" cy="332" r="30" fill="#0d0a16" stroke="#ff2e78" stroke-width="7"/>
+  </g>
+
+  <!-- smoke -->
+  <g fill="#ffffff" opacity="0.18">
+    <circle cx="404" cy="334" r="34"/><circle cx="446" cy="318" r="24"/><circle cx="470" cy="340" r="16"/>
+  </g>
+
+  <text x="256" y="130" font-family="ui-monospace, monospace" font-size="86" font-weight="700"
+        text-anchor="middle" fill="url(#neon)" letter-spacing="6">X71</text>
+</svg>

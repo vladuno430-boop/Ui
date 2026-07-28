@@ -128,6 +128,7 @@ public class Preview {
         float[] uu = new float[3], vv = new float[3];
         float[] lr = new float[3], lg = new float[3], lb = new float[3];
         Vec3 p = new Vec3(), out = new Vec3(), n = new Vec3(), nOut = new Vec3();
+        int modelMaterial = 0;
 
         for (int i = 0; i < data.indexCount; i += 3) {
             boolean behind = false;
@@ -150,23 +151,41 @@ public class Preview {
                 sx[k] = W * 0.5f + cx * camFocal / cz;
                 sy[k] = H * 0.5f - cy * camFocal / cz;
                 sz[k] = cz;
-                uu[k] = 0f;
-                vv[k] = 0f;
+                uu[k] = data.verts[o + 6];
+                vv[k] = data.verts[o + 7];
+                modelMaterial = (int) data.verts[o + 11];
                 float key = Math.max(0f, -(nOut.x * map.sunDir.x + nOut.y * map.sunDir.y
                         + nOut.z * map.sunDir.z));
                 float lightAmount = map.ambient.x * 2.4f + 0.12f + key * 0.55f;
-                lr[k] = data.verts[o + 6] * lightAmount;
-                lg[k] = data.verts[o + 7] * lightAmount;
-                lb[k] = data.verts[o + 8] * lightAmount;
+                lr[k] = data.verts[o + 8] * lightAmount;
+                lg[k] = data.verts[o + 9] * lightAmount;
+                lb[k] = data.verts[o + 10] * lightAmount;
             }
             if (behind) continue;
-            rasterModel(sx, sy, sz, lr, lg, lb, map);
+            rasterModel(sx, sy, sz, lr, lg, lb, uu, vv, modelMaterial, map);
         }
     }
 
     /** Same rasteriser as the world, but with flat vertex colours. */
+    static int[][] modelMaterials = new int[com.arena3.render.ProcTex.MAT_COUNT][];
+
+    static {
+        for (int i = 0; i < com.arena3.render.ProcTex.MAT_COUNT; i++) {
+            modelMaterials[i] = com.arena3.render.ProcTex.generateModel(i);
+        }
+    }
+
+    static float sampleModelMaterial(int material, float u, float v) {
+        int size = com.arena3.render.ProcTex.MODEL_SIZE;
+        int[] tex = modelMaterials[Math.max(0, Math.min(modelMaterials.length - 1, material))];
+        int x = Math.floorMod((int) (u * size), size);
+        int y = Math.floorMod((int) (v * size), size);
+        return ((tex[y * size + x] >> 16) & 0xFF) / 255f;
+    }
+
     static void rasterModel(float[] sx, float[] sy, float[] sz,
-                            float[] lr, float[] lg, float[] lb, MapDef map) {
+                            float[] lr, float[] lg, float[] lb,
+                            float[] tu, float[] tv, int material, MapDef map) {
         int minX = (int) Math.max(0, Math.floor(Math.min(sx[0], Math.min(sx[1], sx[2]))));
         int maxX = (int) Math.min(W - 1, Math.ceil(Math.max(sx[0], Math.max(sx[1], sx[2]))));
         int minY = (int) Math.max(0, Math.floor(Math.min(sy[0], Math.min(sy[1], sy[2]))));
@@ -190,6 +209,12 @@ public class Preview {
                 float r = (w0 * lr[0] / sz[0] + w1 * lr[1] / sz[1] + w2 * lr[2] / sz[2]) * z;
                 float g = (w0 * lg[0] / sz[0] + w1 * lg[1] / sz[1] + w2 * lg[2] / sz[2]) * z;
                 float b = (w0 * lb[0] / sz[0] + w1 * lb[1] / sz[1] + w2 * lb[2] / sz[2]) * z;
+                float mu = (w0 * tu[0] / sz[0] + w1 * tu[1] / sz[1] + w2 * tu[2] / sz[2]) * z;
+                float mv = (w0 * tv[0] / sz[0] + w1 * tv[1] / sz[1] + w2 * tv[2] / sz[2]) * z;
+                float detail = sampleModelMaterial(material, mu, mv) * 1.35f;
+                r *= detail;
+                g *= detail;
+                b *= detail;
                 float f = Math.max(0f, Math.min(1f, (z - map.fogNear) / (map.fogFar - map.fogNear)));
                 r = r * (1 - f) + map.fogColor.x * f;
                 g = g * (1 - f) + map.fogColor.y * f;

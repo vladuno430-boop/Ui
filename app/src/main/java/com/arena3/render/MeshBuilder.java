@@ -1,19 +1,28 @@
 package com.arena3.render;
 
 /**
- * Accumulates coloured, lit boxes into a vertex/index pair. Everything the game
- * draws that is not level geometry — fighters, weapons, pickups, gibs — is built
- * out of these.
+ * Accumulates textured, coloured boxes into a vertex/index pair. Everything the
+ * game draws that is not level geometry — fighters, weapons, pickups, gibs — is
+ * built out of these.
+ *
+ * <p>Every primitive is mapped onto one of the model materials in
+ * {@link ProcTex}, so a fighter is plated metal over a woven undersuit rather
+ * than flat-shaded boxes. Texture coordinates are projected from the surface's
+ * dominant axis and divided by the material's tile size, which keeps the detail
+ * the same scale across parts of very different proportions.
  */
 public final class MeshBuilder {
 
-    /** px py pz | nx ny nz | r g b */
-    public static final int VERTEX_FLOATS = 9;
+    /** px py pz | nx ny nz | u v | r g b | material */
+    public static final int VERTEX_FLOATS = 12;
 
     private float[] verts = new float[512 * VERTEX_FLOATS];
     private int vertexCount;
     private int[] indices = new int[1024];
     private int indexCount;
+
+    private int material = ProcTex.MAT_ARMOR;
+    private float tileSize = 24f;
 
     public static final class MeshData {
         public final float[] verts;
@@ -32,6 +41,19 @@ public final class MeshBuilder {
     public MeshBuilder reset() {
         vertexCount = 0;
         indexCount = 0;
+        material = ProcTex.MAT_ARMOR;
+        tileSize = 24f;
+        return this;
+    }
+
+    /**
+     * Selects the material for everything added next.
+     *
+     * @param tile world units covered by one repeat of the texture
+     */
+    public MeshBuilder material(int material, float tile) {
+        this.material = material;
+        this.tileSize = tile;
         return this;
     }
 
@@ -42,7 +64,7 @@ public final class MeshBuilder {
         float ay0 = Math.min(y0, y1), ay1 = Math.max(y0, y1);
         float az0 = Math.min(z0, z1), az1 = Math.max(z0, z1);
 
-        // Slight per-face shading so the silhouette reads without any lighting.
+        // Per-face shading so the silhouette reads even before lighting.
         face(ax1, ay0, az0, ax1, ay1, az0, ax1, ay1, az1, ax1, ay0, az1, 1, 0, 0, r, g, b, 1.00f);
         face(ax0, ay1, az0, ax0, ay0, az0, ax0, ay0, az1, ax0, ay1, az1, -1, 0, 0, r, g, b, 0.80f);
         face(ax1, ay1, az0, ax0, ay1, az0, ax0, ay1, az1, ax1, ay1, az1, 0, 1, 0, r, g, b, 0.92f);
@@ -64,7 +86,6 @@ public final class MeshBuilder {
     public MeshBuilder taperedBox(float x0, float x1, float cy, float cz, float hy, float hz,
                                   float taper, float r, float g, float b) {
         float ty = hy * taper, tz = hz * taper;
-        // four sides
         quad(x0, cy - hy, cz - hz, x1, cy - ty, cz - tz, x1, cy - ty, cz + tz, x0, cy - hy, cz + hz,
                 r, g, b, 0.86f);
         quad(x0, cy + hy, cz + hz, x1, cy + ty, cz + tz, x1, cy + ty, cz - tz, x0, cy + hy, cz - hz,
@@ -73,7 +94,6 @@ public final class MeshBuilder {
                 r, g, b, 1.08f);
         quad(x0, cy + hy, cz - hz, x1, cy + ty, cz - tz, x1, cy - ty, cz - tz, x0, cy - hy, cz - hz,
                 r, g, b, 0.58f);
-        // caps
         quad(x1, cy - ty, cz - tz, x1, cy + ty, cz - tz, x1, cy + ty, cz + tz, x1, cy - ty, cz + tz,
                 r, g, b, 1.0f);
         quad(x0, cy + hy, cz - hz, x0, cy - hy, cz - hz, x0, cy - hy, cz + hz, x0, cy + hy, cz + hz,
@@ -92,7 +112,10 @@ public final class MeshBuilder {
                 double theta = 2 * Math.PI * j / segments;
                 float x = (float) (rr * Math.cos(theta));
                 float y = (float) (rr * Math.sin(theta));
-                addVertex(cx + x * radius, cy + y * radius, cz + z * radius, x, y, z, r, g, b);
+                // Spherical mapping, scaled so the tiling matches flat surfaces.
+                float u = (float) (j / (double) segments) * (radius * 6.2831855f / tileSize);
+                float v = (float) (i / (double) rings) * (radius * 3.14159f / tileSize);
+                addVertex(cx + x * radius, cy + y * radius, cz + z * radius, x, y, z, u, v, r, g, b);
             }
         }
         for (int i = 0; i < rings; i++) {
@@ -106,15 +129,16 @@ public final class MeshBuilder {
         return this;
     }
 
-    /** Flat-shaded quad with an explicit normal. */
+    /** Flat-shaded quad with an explicit normal, UVs projected from its plane. */
     private void face(float x0, float y0, float z0, float x1, float y1, float z1,
                       float x2, float y2, float z2, float x3, float y3, float z3,
                       float nx, float ny, float nz, float r, float g, float b, float shade) {
         int base = vertexCount;
-        addVertex(x0, y0, z0, nx, ny, nz, r * shade, g * shade, b * shade);
-        addVertex(x1, y1, z1, nx, ny, nz, r * shade, g * shade, b * shade);
-        addVertex(x2, y2, z2, nx, ny, nz, r * shade, g * shade, b * shade);
-        addVertex(x3, y3, z3, nx, ny, nz, r * shade, g * shade, b * shade);
+        int axis = dominantAxis(nx, ny, nz);
+        addProjected(x0, y0, z0, nx, ny, nz, axis, r * shade, g * shade, b * shade);
+        addProjected(x1, y1, z1, nx, ny, nz, axis, r * shade, g * shade, b * shade);
+        addProjected(x2, y2, z2, nx, ny, nz, axis, r * shade, g * shade, b * shade);
+        addProjected(x3, y3, z3, nx, ny, nz, axis, r * shade, g * shade, b * shade);
         addTri(base, base + 1, base + 2);
         addTri(base, base + 2, base + 3);
     }
@@ -137,8 +161,35 @@ public final class MeshBuilder {
         face(x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, nx, ny, nz, r, g, b, shade);
     }
 
+    private static int dominantAxis(float nx, float ny, float nz) {
+        float ax = Math.abs(nx), ay = Math.abs(ny), az = Math.abs(nz);
+        if (az >= ax && az >= ay) return 2;
+        return ax >= ay ? 0 : 1;
+    }
+
+    /** Adds a vertex with UVs projected along the surface's dominant axis. */
+    private void addProjected(float x, float y, float z, float nx, float ny, float nz, int axis,
+                              float r, float g, float b) {
+        float u, v;
+        switch (axis) {
+            case 0:
+                u = y;
+                v = -z;
+                break;
+            case 1:
+                u = x;
+                v = -z;
+                break;
+            default:
+                u = x;
+                v = -y;
+                break;
+        }
+        addVertex(x, y, z, nx, ny, nz, u / tileSize, v / tileSize, r, g, b);
+    }
+
     private void addVertex(float x, float y, float z, float nx, float ny, float nz,
-                           float r, float g, float b) {
+                           float u, float v, float r, float g, float b) {
         if ((vertexCount + 1) * VERTEX_FLOATS > verts.length) {
             verts = java.util.Arrays.copyOf(verts, verts.length * 2);
         }
@@ -149,9 +200,12 @@ public final class MeshBuilder {
         verts[o + 3] = nx;
         verts[o + 4] = ny;
         verts[o + 5] = nz;
-        verts[o + 6] = r;
-        verts[o + 7] = g;
-        verts[o + 8] = b;
+        verts[o + 6] = u;
+        verts[o + 7] = v;
+        verts[o + 8] = r;
+        verts[o + 9] = g;
+        verts[o + 10] = b;
+        verts[o + 11] = material;
         vertexCount++;
     }
 

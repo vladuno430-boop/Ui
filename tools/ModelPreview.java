@@ -5,6 +5,7 @@ import com.arena3.game.WeaponDef;
 import com.arena3.render.FighterPose;
 import com.arena3.render.MeshBuilder;
 import com.arena3.render.Models;
+import com.arena3.render.ProcTex;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -19,6 +20,20 @@ public class ModelPreview {
     static int[] pixels;
     static Vec3 camEye = new Vec3(), camFwd = new Vec3(), camRight = new Vec3(), camUp = new Vec3();
     static float focal;
+    static int[][] materials = new int[ProcTex.MAT_COUNT][];
+
+    static {
+        for (int i = 0; i < ProcTex.MAT_COUNT; i++) materials[i] = ProcTex.generateModel(i);
+    }
+
+    /** Samples a model material, wrapping like GL does. */
+    static float sampleMaterial(int material, float u, float v) {
+        int[] tex = materials[Math.max(0, Math.min(ProcTex.MAT_COUNT - 1, material))];
+        int size = ProcTex.MODEL_SIZE;
+        int x = Math.floorMod((int) (u * size), size);
+        int y = Math.floorMod((int) (v * size), size);
+        return ((tex[y * size + x] >> 16) & 0xFF) / 255f;
+    }
 
     public static void main(String[] args) throws Exception {
         int cellW = 240, cellH = 300;
@@ -137,6 +152,8 @@ public class ModelPreview {
     static void draw(MeshBuilder.MeshData data, Mat4 transform) {
         float[] sx = new float[3], sy = new float[3], sz = new float[3];
         float[] cr = new float[3], cg = new float[3], cb = new float[3];
+        float[] tu = new float[3], tv = new float[3];
+        int mat = 0;
         Vec3 p = new Vec3(), out = new Vec3(), n = new Vec3(), nOut = new Vec3();
         key.normalize();
 
@@ -161,18 +178,22 @@ public class ModelPreview {
                 sx[k] = W * 0.5f + (dx * camRight.x + dy * camRight.y + dz * camRight.z) * focal / cz;
                 sy[k] = H * 0.5f - (dx * camUp.x + dy * camUp.y + dz * camUp.z) * focal / cz;
                 sz[k] = cz;
+                tu[k] = data.verts[o + 6];
+                tv[k] = data.verts[o + 7];
+                mat = (int) data.verts[o + 11];
                 float lam = Math.max(0f, -(nOut.x * key.x + nOut.y * key.y + nOut.z * key.z));
                 float light = 0.30f + lam * 0.85f;
-                cr[k] = data.verts[o + 6] * light;
-                cg[k] = data.verts[o + 7] * light;
-                cb[k] = data.verts[o + 8] * light;
+                cr[k] = data.verts[o + 8] * light;
+                cg[k] = data.verts[o + 9] * light;
+                cb[k] = data.verts[o + 10] * light;
             }
             if (skip) continue;
-            raster(sx, sy, sz, cr, cg, cb);
+            raster(sx, sy, sz, cr, cg, cb, tu, tv, mat);
         }
     }
 
-    static void raster(float[] sx, float[] sy, float[] sz, float[] cr, float[] cg, float[] cb) {
+    static void raster(float[] sx, float[] sy, float[] sz, float[] cr, float[] cg, float[] cb,
+                       float[] tu, float[] tv, int material) {
         int minX = (int) Math.max(0, Math.floor(Math.min(sx[0], Math.min(sx[1], sx[2]))));
         int maxX = (int) Math.min(W - 1, Math.ceil(Math.max(sx[0], Math.max(sx[1], sx[2]))));
         int minY = (int) Math.max(0, Math.floor(Math.min(sy[0], Math.min(sy[1], sy[2]))));
@@ -196,7 +217,10 @@ public class ModelPreview {
                 float r = (w0 * cr[0] / sz[0] + w1 * cr[1] / sz[1] + w2 * cr[2] / sz[2]) * z;
                 float g = (w0 * cg[0] / sz[0] + w1 * cg[1] / sz[1] + w2 * cg[2] / sz[2]) * z;
                 float b = (w0 * cb[0] / sz[0] + w1 * cb[1] / sz[1] + w2 * cb[2] / sz[2]) * z;
-                pixels[o] = (c255(r) << 16) | (c255(g) << 8) | c255(b);
+                float u = (w0 * tu[0] / sz[0] + w1 * tu[1] / sz[1] + w2 * tu[2] / sz[2]) * z;
+                float v = (w0 * tv[0] / sz[0] + w1 * tv[1] / sz[1] + w2 * tv[2] / sz[2]) * z;
+                float detail = sampleMaterial(material, u, v) * 1.35f;
+                pixels[o] = (c255(r * detail) << 16) | (c255(g * detail) << 8) | c255(b * detail);
             }
         }
     }

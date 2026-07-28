@@ -53,7 +53,7 @@ public final class Maps {
 
     private static MapDef forge() {
         MapBuilder b = new MapBuilder("forge", nameOf(0), subtitleOf(0), descriptionOf(0));
-        b.ambient(0.085f, 0.082f, 0.105f)
+        b.ambient(0.115f, 0.112f, 0.140f)
                 .sun(-0.4f, -0.3f, -0.87f, 0.10f, 0.10f, 0.13f)
                 .fog(0.05f, 0.045f, 0.06f, 1600f, 4200f)
                 .skyStyle(1)
@@ -168,7 +168,7 @@ public final class Maps {
 
     private static MapDef crucible() {
         MapBuilder b = new MapBuilder("crucible", nameOf(1), subtitleOf(1), descriptionOf(1));
-        b.ambient(0.115f, 0.125f, 0.165f)
+        b.ambient(0.150f, 0.160f, 0.205f)
                 .sun(-0.45f, -0.25f, -0.85f, 0.30f, 0.29f, 0.27f)
                 .fog(0.09f, 0.10f, 0.13f, 2200f, 6000f)
                 .skyStyle(0)
@@ -281,7 +281,7 @@ public final class Maps {
 
     private static MapDef theVoid() {
         MapBuilder b = new MapBuilder("void", nameOf(2), subtitleOf(2), descriptionOf(2));
-        b.ambient(0.075f, 0.08f, 0.125f)
+        b.ambient(0.100f, 0.106f, 0.155f)
                 .sun(0.2f, -0.4f, -0.89f, 0.20f, 0.20f, 0.28f)
                 .fog(0.02f, 0.02f, 0.04f, 3000f, 9000f)
                 .skyStyle(2)

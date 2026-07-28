@@ -5,12 +5,14 @@ import android.opengl.GLSurfaceView;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.arena3.R;
@@ -38,6 +40,7 @@ public final class GameActivity extends Activity implements GameRenderer.Listene
     private Settings settings;
     private GameWorld world;
     private View pauseOverlay;
+    private View loadingView;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -76,7 +79,50 @@ public final class GameActivity extends Activity implements GameRenderer.Listene
         FrameLayout root = new FrameLayout(this);
         root.addView(view, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
+
+        // Textures and level lighting are generated on the render thread, which
+        // takes a moment; cover it rather than showing a black screen.
+        loadingView = buildLoadingView(map.name);
+        root.addView(loadingView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
         setContentView(root);
+    }
+
+    private View buildLoadingView(String mapName) {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setGravity(Gravity.CENTER);
+        box.setBackgroundColor(0xFF08090C);
+
+        TextView title = new TextView(this);
+        title.setText(mapName);
+        title.setTextColor(0xFFD8DEE9);
+        title.setTextSize(28f);
+        title.setLetterSpacing(0.25f);
+        title.setGravity(Gravity.CENTER);
+        box.addView(title);
+
+        TextView sub = new TextView(this);
+        sub.setText("BUILDING ARENA");
+        sub.setTextColor(0xFFE8A33D);
+        sub.setTextSize(12f);
+        sub.setLetterSpacing(0.4f);
+        sub.setGravity(Gravity.CENTER);
+        box.addView(sub);
+        return box;
+    }
+
+    @Override
+    public void onReady() {
+        runOnUiThread(() -> {
+            if (loadingView == null) return;
+            loadingView.animate().alpha(0f).setDuration(220).withEndAction(() -> {
+                if (loadingView != null && loadingView.getParent() != null) {
+                    ((ViewGroup) loadingView.getParent()).removeView(loadingView);
+                }
+                loadingView = null;
+            }).start();
+        });
     }
 
     private void applyControlSettings() {

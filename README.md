@@ -81,13 +81,23 @@ links. The Forge yields ~385 nodes and 5400 links.
 
 ### Everything is synthesised
 
-Sixteen materials — brushed panels, rusted plate, tread floor, grating,
-concrete, lava, warning stripes — come out of tileable value noise, bevel
-functions and rivet patterns, uploaded into one array texture so the whole level
-draws in a single call. Fighters, weapons and pickups are built from shaded
-boxes and low-poly spheres. Thirty sound effects are synthesised as PCM from
-noise, oscillators and envelopes, then mixed in software so they can be
-positioned and panned around the player.
+Sixteen world materials at 512x512 — panelled walls with vents and bolts, rusted
+plate that bleeds downwards, diamond tread, grating, cracked concrete, lava,
+worn hazard stripes — come out of tileable value and ridged noise. Each is built
+in three tiers so it reads at every distance: panel structure large enough to
+survive the mip chain, mid-scale bolts and vents, then a fine grain, with wear
+and grime layered on top. They live in one array texture, so the whole level
+still draws in a single call.
+
+Fighters and weapons have their own eight-material set — plated armour, a woven
+undersuit, machined gunmetal, ribbed grips, glowing visors — projected onto the
+box geometry from each surface's dominant axis, so a fighter is a plated machine
+rather than flat-shaded blocks. Generation is spread across cores and runs
+behind a loading screen; the whole set is 18 MB of texture.
+
+Thirty sound effects are synthesised as PCM from noise, oscillators and
+envelopes, then mixed in software so they can be positioned and panned around
+the player.
 
 ## Testing without a device
 

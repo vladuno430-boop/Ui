@@ -327,7 +327,9 @@ public final class WorldGeometry {
             if (isSky) {
                 r = g = b = 1f;
             } else if (glow) {
-                r = g = b = 1.55f;
+                // Bright enough to read as a light source, but not so far past
+                // white that the fixture's own colour is lost.
+                r = g = b = 1.15f;
             } else {
                 computeLight(vertex, nx, ny, nz);
                 r = lightAccum[0];

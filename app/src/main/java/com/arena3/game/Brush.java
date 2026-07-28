@@ -37,7 +37,7 @@ public final class Brush {
         this.texture = new int[n];
         this.surfaceFlags = new int[n];
         this.texScale = new float[n];
-        java.util.Arrays.fill(texScale, 64f);
+        java.util.Arrays.fill(texScale, 128f);
         computeBounds();
     }
 

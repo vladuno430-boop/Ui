@@ -19,6 +19,8 @@ public final class Textures {
 
     /** All world materials in one array texture, so the level is one draw call. */
     public int worldArray;
+    /** Materials for fighters, weapons and pickups. */
+    public int modelArray;
     /** Soft round sprite for particles. */
     public int particle;
     /** Bitmap font atlas plus a white pixel for solid HUD fills. */
@@ -36,24 +38,32 @@ public final class Textures {
 
     public void create() {
         worldArray = createWorldArray();
+        modelArray = createModelArray();
         particle = createParticle();
         font = createFont();
     }
 
     private int createWorldArray() {
+        return createArray(ProcTex.SIZE, Tex.COUNT, ProcTex.generateAllWorld());
+    }
+
+    private int createModelArray() {
+        return createArray(ProcTex.MODEL_SIZE, ProcTex.MAT_COUNT, ProcTex.generateAllModel());
+    }
+
+    /** Uploads a set of same-sized materials as one mipmapped array texture. */
+    private int createArray(int size, int layers, int[][] pixels) {
         int[] tex = new int[1];
         GLES30.glGenTextures(1, tex, 0);
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D_ARRAY, tex[0]);
 
-        int size = ProcTex.SIZE;
         int levels = 1 + (int) (Math.log(size) / Math.log(2));
-        GLES30.glTexStorage3D(GLES30.GL_TEXTURE_2D_ARRAY, levels, GLES30.GL_RGBA8, size, size, Tex.COUNT);
+        GLES30.glTexStorage3D(GLES30.GL_TEXTURE_2D_ARRAY, levels, GLES30.GL_RGBA8, size, size, layers);
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(size * size * 4).order(ByteOrder.nativeOrder());
-        for (int layer = 0; layer < Tex.COUNT; layer++) {
-            int[] pixels = ProcTex.generate(layer);
+        for (int layer = 0; layer < layers; layer++) {
             buffer.clear();
-            for (int p : pixels) {
+            for (int p : pixels[layer]) {
                 // ARGB from the generator, RGBA for GL.
                 buffer.put((byte) ((p >> 16) & 0xFF));
                 buffer.put((byte) ((p >> 8) & 0xFF));
@@ -140,7 +150,7 @@ public final class Textures {
     }
 
     public void dispose() {
-        int[] tex = {worldArray, particle, font};
-        GLES30.glDeleteTextures(3, tex, 0);
+        int[] tex = {worldArray, modelArray, particle, font};
+        GLES30.glDeleteTextures(tex.length, tex, 0);
     }
 }

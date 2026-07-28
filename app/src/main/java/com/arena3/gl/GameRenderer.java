@@ -39,6 +39,9 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         void onPauseRequested();
 
         void onMatchEnded(GameWorld world);
+
+        /** The first frame has been drawn, so the loading screen can go. */
+        void onReady();
     }
 
     private final GameWorld world;
@@ -65,6 +68,7 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
     private long lastFrameNanos;
     private boolean paused;
     private boolean matchEndNotified;
+    private boolean readyNotified;
 
     // camera state
     private final Vec3 eye = new Vec3();
@@ -181,7 +185,7 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
     }
 
     private Mesh upload(MeshBuilder.MeshData data) {
-        Mesh mesh = new Mesh(new int[]{3, 3, 3}, false, 0);
+        Mesh mesh = new Mesh(new int[]{3, 3, 2, 3, 1}, false, 0);
         mesh.upload(data.verts, data.verts.length, data.indices, data.indexCount);
         return mesh;
     }
@@ -212,6 +216,11 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         }
         drawScene();
         drawInterface(dt);
+
+        if (!readyNotified) {
+            readyNotified = true;
+            if (listener != null) listener.onReady();
+        }
     }
 
     private void step(float dt) {
@@ -588,7 +597,10 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         modelProgram.set("uTint", 1f, 1f, 1f);
         modelProgram.set("uEmissive", 0f);
         modelProgram.set("uAlpha", 1f);
+        modelProgram.set("uTex", 0);
         applyLightUniforms(modelProgram);
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D_ARRAY, textures.modelArray);
     }
 
     private void drawEntities() {
@@ -716,7 +728,10 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         modelProgram.set("uKeyColor", 0.75f, 0.74f, 0.72f);
         modelProgram.set("uEmissive", 0f);
         modelProgram.set("uAlpha", 1f);
+        modelProgram.set("uTex", 0);
         applyLightUniforms(modelProgram);
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D_ARRAY, textures.modelArray);
 
         float bob = (float) Math.sin(me.bobCycle * 6.2831855f) * 1.6f * me.bobFraction;
         float bobSide = (float) Math.cos(me.bobCycle * 3.14159f) * 1.9f * me.bobFraction;

@@ -25,6 +25,12 @@ android {
         }
     }
 
+    // AGP 8 stopped generating BuildConfig unless asked; the activity uses it to
+    // enable WebView remote debugging on debug builds only.
+    buildFeatures {
+        buildConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

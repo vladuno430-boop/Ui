@@ -17,7 +17,7 @@ mkdir -p out
 javac -nowarn -d out $SRC \
     app/src/main/java/com/arena3/audio/SoundSynth.java \
     tools/HeadlessTest.java tools/SoundTest.java tools/Preview.java \
-    tools/ModelPreview.java tools/TexPreview.java
+    tools/ModelPreview.java tools/TexPreview.java tools/SoftShadowMap.java
 
 echo
 echo "== simulation tests =="

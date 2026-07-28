@@ -35,6 +35,8 @@ public final class SettingsActivity extends Activity {
         toggle(R.id.sw_fps, settings.showFps(), settings::setShowFps);
         toggle(R.id.sw_haptics, settings.haptics(), settings::setHaptics);
         toggle(R.id.sw_zones, settings.showZones(), settings::setShowZones);
+        toggle(R.id.sw_enhanced, settings.enhancedLighting(), settings::setEnhancedLighting);
+        toggle(R.id.sw_sharpshadows, settings.sharpShadows(), settings::setSharpShadows);
 
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
     }

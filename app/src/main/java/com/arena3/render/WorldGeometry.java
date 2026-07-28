@@ -25,8 +25,8 @@ import java.util.List;
  */
 public final class WorldGeometry {
 
-    /** px py pz | nx ny nz | u v | r g b | textureLayer */
-    public static final int VERTEX_FLOATS = 12;
+    /** px py pz | nx ny nz | u v | r g b | ambientOcclusion | textureLayer */
+    public static final int VERTEX_FLOATS = 13;
     /** Edge length of the lighting grid, in world units. */
     private static final float LIGHT_GRID = 128f;
     private static final int MAX_POLY = 64;
@@ -323,21 +323,24 @@ public final class WorldGeometry {
         for (int i = 0; i < count; i++) {
             float s = cellTmp[i * 2], t = cellTmp[i * 2 + 1];
             unproject(axis, s, t, nx, ny, nz, dist, vertex);
-            float r, g, b;
+            float r, g, b, ao;
             if (isSky) {
                 r = g = b = 1f;
+                ao = 1f;
             } else if (glow) {
                 // Bright enough to read as a light source, but not so far past
                 // white that the fixture's own colour is lost.
                 r = g = b = 1.15f;
+                ao = 1f;
             } else {
                 computeLight(vertex, nx, ny, nz);
                 r = lightAccum[0];
                 g = lightAccum[1];
                 b = lightAccum[2];
+                ao = lightAccum[3];
             }
             addVertex(isSky, vertex.x, vertex.y, vertex.z, nx, ny, nz,
-                    s / scale, t / scale, r, g, b, layer);
+                    s / scale, t / scale, r, g, b, ao, layer);
         }
         // Fan triangulation — every polygon here is convex.
         for (int i = 1; i + 1 < count; i++) {
@@ -348,17 +351,17 @@ public final class WorldGeometry {
     }
 
     private void addVertex(boolean sky, float x, float y, float z, float nx, float ny, float nz,
-                           float u, float v, float r, float g, float b, float layer) {
+                           float u, float v, float r, float g, float b, float ao, float layer) {
         if (sky) {
             skyVerts = ensure(skyVerts, (skyVertexCount + 1) * VERTEX_FLOATS);
             int o = skyVertexCount * VERTEX_FLOATS;
-            writeVertex(skyVerts, o, x, y, z, nx, ny, nz, u, v, r, g, b, layer);
+            writeVertex(skyVerts, o, x, y, z, nx, ny, nz, u, v, r, g, b, ao, layer);
             skyVertexCount++;
             return;
         }
         verts = ensure(verts, (vertexCount + 1) * VERTEX_FLOATS);
         int o = vertexCount * VERTEX_FLOATS;
-        writeVertex(verts, o, x, y, z, nx, ny, nz, u, v, r, g, b, layer);
+        writeVertex(verts, o, x, y, z, nx, ny, nz, u, v, r, g, b, ao, layer);
         vertexCount++;
 
         boundsMin.set(Math.min(boundsMin.x, x), Math.min(boundsMin.y, y), Math.min(boundsMin.z, z));
@@ -367,7 +370,7 @@ public final class WorldGeometry {
 
     private static void writeVertex(float[] a, int o, float x, float y, float z,
                                     float nx, float ny, float nz, float u, float v,
-                                    float r, float g, float b, float layer) {
+                                    float r, float g, float b, float ao, float layer) {
         a[o] = x;
         a[o + 1] = y;
         a[o + 2] = z;
@@ -379,7 +382,8 @@ public final class WorldGeometry {
         a[o + 8] = r;
         a[o + 9] = g;
         a[o + 10] = b;
-        a[o + 11] = layer;
+        a[o + 11] = ao;
+        a[o + 12] = layer;
     }
 
     private void addIndex(boolean sky, int index) {
@@ -408,7 +412,8 @@ public final class WorldGeometry {
 
     // -------------------------------------------------------------- lighting
 
-    private final float[] lightAccum = new float[3];
+    /** r, g, b, ambient occlusion. */
+    private final float[] lightAccum = new float[4];
     private final Vec3 aoDir = new Vec3();
     private final Vec3 aoEnd = new Vec3();
     private final Vec3 aoTangent = new Vec3();
@@ -470,15 +475,9 @@ public final class WorldGeometry {
         // by sampling the surroundings.
         float ao = ambientOcclusion(p, nx, ny, nz);
 
+        // The sun is left out on purpose: it is evaluated per pixel at draw time
+        // so the shadow map can cut it. Everything else is baked.
         float r = map.ambient.x * ao, g = map.ambient.y * ao, b = map.ambient.z * ao;
-
-        float sun = -(nx * map.sunDir.x + ny * map.sunDir.y + nz * map.sunDir.z);
-        if (sun > 0f) {
-            sun *= ao;
-            r += map.sunColor.x * sun;
-            g += map.sunColor.y * sun;
-            b += map.sunColor.z * sun;
-        }
 
         for (int i = 0; i < lights.size(); i++) {
             MapDef.Light light = lights.get(i);
@@ -510,5 +509,6 @@ public final class WorldGeometry {
         lightAccum[0] = Math.min(r, 2.2f);
         lightAccum[1] = Math.min(g, 2.2f);
         lightAccum[2] = Math.min(b, 2.2f);
+        lightAccum[3] = ao;
     }
 }

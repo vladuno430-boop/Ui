@@ -28,6 +28,8 @@
     <string name="haptics">HAPTIC FEEDBACK</string>
     <string name="southpaw">SOUTHPAW LAYOUT</string>
     <string name="gyro_aim">SHOW TOUCH ZONES</string>
+    <string name="enhanced_lighting">SHADOWS AND REFLECTIONS</string>
+    <string name="sharp_shadows">HIGH-DETAIL SHADOWS</string>
 
     <string name="about_body">An original arena shooter built from scratch: brush-based
         levels, Quake-style movement physics with strafe jumping and rocket jumps,

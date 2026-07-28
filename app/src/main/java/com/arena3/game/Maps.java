@@ -168,8 +168,11 @@ public final class Maps {
 
     private static MapDef crucible() {
         MapBuilder b = new MapBuilder("crucible", nameOf(1), subtitleOf(1), descriptionOf(1));
-        b.ambient(0.150f, 0.160f, 0.205f)
-                .sun(-0.45f, -0.25f, -0.85f, 0.30f, 0.29f, 0.27f)
+        // The sun is cast through the shadow map rather than baked flat, so it
+        // carries more of the exposure and the ambient carries less: that is what
+        // gives the shadows something to cut into.
+        b.ambient(0.118f, 0.128f, 0.180f)
+                .sun(-0.45f, -0.25f, -0.85f, 0.62f, 0.55f, 0.42f)
                 .fog(0.09f, 0.10f, 0.13f, 2200f, 6000f)
                 .skyStyle(0)
                 .killZ(-900f);
@@ -281,8 +284,8 @@ public final class Maps {
 
     private static MapDef theVoid() {
         MapBuilder b = new MapBuilder("void", nameOf(2), subtitleOf(2), descriptionOf(2));
-        b.ambient(0.100f, 0.106f, 0.155f)
-                .sun(0.2f, -0.4f, -0.89f, 0.20f, 0.20f, 0.28f)
+        b.ambient(0.088f, 0.094f, 0.140f)
+                .sun(0.2f, -0.4f, -0.89f, 0.34f, 0.34f, 0.44f)
                 .fog(0.02f, 0.02f, 0.04f, 3000f, 9000f)
                 .skyStyle(2)
                 .killZ(-700f);

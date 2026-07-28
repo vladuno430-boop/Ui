@@ -21,6 +21,7 @@ import com.arena3.render.MeshBuilder;
 import com.arena3.render.Models;
 import com.arena3.render.ParticleSystem;
 import com.arena3.render.ProcTex;
+import com.arena3.render.ShadowFit;
 import com.arena3.render.WorldGeometry;
 import com.arena3.core.Mat4;
 
@@ -305,6 +306,99 @@ public final class HeadlessTest {
     }
 
     /**
+     * The sun's shadow projection has to enclose the whole arena: anything that
+     * falls outside the light's box gets no shadow test at all, which shows up as
+     * a hard-edged patch of unshadowed floor.
+     */
+    private static void checkShadowFit(WorldGeometry geo, MapDef map) {
+        ShadowFit fit = new ShadowFit();
+        fit.fit(geo.boundsMin, geo.boundsMax, map.sunDir);
+        float[] lvp = fit.lightViewProj.m;
+
+        int outside = 0;
+        float minDepth = Float.MAX_VALUE, maxDepth = -Float.MAX_VALUE;
+        for (int i = 0; i < geo.vertexCount; i++) {
+            int o = i * WorldGeometry.VERTEX_FLOATS;
+            float x = geo.verts[o], y = geo.verts[o + 1], z = geo.verts[o + 2];
+            float w = lvp[3] * x + lvp[7] * y + lvp[11] * z + lvp[15];
+            float cx = (lvp[0] * x + lvp[4] * y + lvp[8] * z + lvp[12]) / w;
+            float cy = (lvp[1] * x + lvp[5] * y + lvp[9] * z + lvp[13]) / w;
+            float cz = (lvp[2] * x + lvp[6] * y + lvp[10] * z + lvp[14]) / w;
+            if (w <= 0f || cx < -1f || cx > 1f || cy < -1f || cy > 1f || cz < -1f || cz > 1f) {
+                outside++;
+            }
+            minDepth = Math.min(minDepth, cz);
+            maxDepth = Math.max(maxDepth, cz);
+        }
+        check("  shadow box encloses the map", outside == 0);
+        // A box far larger than the geometry wastes texels and softens everything.
+        check("  shadow depth range is tight", maxDepth - minDepth > 0.5f);
+
+        // The light basis must stay orthonormal or the projection shears.
+        float dotFR = fit.forward.dot(fit.right);
+        float dotFU = fit.forward.dot(fit.up);
+        float dotRU = fit.right.dot(fit.up);
+        check("  light basis is orthonormal",
+                Math.abs(dotFR) < 1e-3f && Math.abs(dotFU) < 1e-3f && Math.abs(dotRU) < 1e-3f);
+    }
+
+    /**
+     * The real test of a shadow map: does it agree with the truth? A ray from the
+     * surface towards the sun says whether a point is occluded, so every sampled
+     * vertex gets both answers and they had better match.
+     *
+     * <p>Points near a shadow edge are skipped — PCF is deliberately soft there,
+     * and a ray is not — as are points on faces angled away from the sun, which
+     * get no sunlight either way. A ray that ends on a sky face has escaped the
+     * level: the sun comes from there, so that counts as unoccluded.
+     */
+    private static void checkShadowAgreement(WorldGeometry geo, MapDef map, CollisionWorld cw) {
+        SoftShadowMap sm = new SoftShadowMap();
+        sm.build(geo, map.sunDir);
+
+        Vec3 start = new Vec3(), end = new Vec3();
+        Trace tr = new Trace();
+        int compared = 0, disagree = 0, falseShadows = 0;
+        // Every eighth vertex keeps the test quick and still samples thousands.
+        for (int i = 0; i < geo.vertexCount; i += 8) {
+            int o = i * WorldGeometry.VERTEX_FLOATS;
+            float nx = geo.verts[o + 3], ny = geo.verts[o + 4], nz = geo.verts[o + 5];
+            float ndl = -(nx * map.sunDir.x + ny * map.sunDir.y + nz * map.sunDir.z);
+            if (ndl < 0.25f) continue;          // grazing or back-facing: no sun anyway
+
+            float shadow = sm.factor(geo.verts[o], geo.verts[o + 1], geo.verts[o + 2], ndl);
+            if (shadow > 0.05f && shadow < 0.95f) continue;   // inside the soft edge
+
+            // Lift off the surface so the ray does not start inside its own face.
+            start.set(geo.verts[o] + nx * 2f, geo.verts[o + 1] + ny * 2f, geo.verts[o + 2] + nz * 2f);
+            end.set(start.x - map.sunDir.x * 8000f, start.y - map.sunDir.y * 8000f,
+                    start.z - map.sunDir.z * 8000f);
+            cw.traceRay(tr, start, end, Contents.SOLID);
+            boolean rayBlocked = tr.fraction < 1f && (tr.surfaceFlags & Contents.SURF_SKY) == 0;
+            boolean mapBlocked = shadow < 0.5f;
+
+            compared++;
+            if (rayBlocked != mapBlocked) {
+                disagree++;
+                // Front-face culling means a caster whose far side was dropped as
+                // a buried face writes nothing, so the only tolerated error is a
+                // missing shadow. A false one is acne, and that is always visible.
+                if (!rayBlocked) falseShadows++;
+            }
+        }
+
+        float rate = compared == 0 ? 0f : disagree / (float) compared;
+        System.out.printf(Locale.ROOT,
+                "  shadow map vs ray trace: %d samples, %.2f%% disagree (%d false)%n",
+                compared, rate * 100f, falseShadows);
+        check("  enough sunlit surface to test", compared > 200);
+        // What is left over are contact shadows a few texels wide at wall bases,
+        // where the caster's own far face was dropped as buried geometry.
+        check("  shadow map matches ray-traced visibility", rate < 0.05f);
+        check("  no false shadows (acne)", falseShadows == 0);
+    }
+
+    /**
      * Rides every jump pad. An arc that lands short, clips the edge of its
      * destination or drops the player into the void makes a map unplayable, and
      * it is invisible from reading the numbers.
@@ -389,9 +483,18 @@ public final class HeadlessTest {
                 float v = geo.verts[i];
                 if (Float.isNaN(v) || Float.isInfinite(v)) finite = false;
             }
+            // The sun is applied per pixel so the shadow map can cut it, which
+            // leaves occlusion and the texture layer riding along in the vertex.
+            float minAo = 1f, maxAo = 0f;
+            boolean layersValid = true;
             for (int i = 0; i < geo.vertexCount; i++) {
                 int o = i * WorldGeometry.VERTEX_FLOATS;
                 maxLight = Math.max(maxLight, geo.verts[o + 8]);
+                float ao = geo.verts[o + 11];
+                minAo = Math.min(minAo, ao);
+                maxAo = Math.max(maxAo, ao);
+                int layer = (int) geo.verts[o + 12];
+                if (layer < 0 || layer >= Tex.COUNT) layersValid = false;
             }
             boolean indicesValid = true;
             for (int i = 0; i < geo.indexCount; i++) {
@@ -403,7 +506,12 @@ public final class HeadlessTest {
             check("  indices are in range", indicesValid);
             check("  geometry is non-trivial", geo.triangleCount() > 500);
             check("  lighting stays in range", maxLight > 0.05f && maxLight <= 2.3f);
+            check("  occlusion stays in 0..1", minAo >= 0f && maxAo <= 1f && maxAo > 0.5f);
+            check("  texture layers are valid", layersValid);
             check("  bake is fast enough", ms < 3000);
+
+            checkShadowFit(geo, map);
+            checkShadowAgreement(geo, map, cw);
         }
 
         // Models: every mesh must build with usable geometry.

@@ -18,6 +18,66 @@ public final class Shaders {
                     + "  return vec4(sqrt(clamp(color, 0.0, 1.0)), 1.0);\n"
                     + "}\n";
 
+
+    /**
+     * Shared lighting helpers: a PCF shadow lookup, a cheap analytic environment
+     * for reflections, and the Fresnel term that decides how much of it shows.
+     */
+    private static final String LIGHTING_COMMON =
+            "uniform sampler2D uShadowMap;\n"
+                    + "uniform mat4 uLightViewProj;\n"
+                    + "uniform vec3 uSunDir;\n"
+                    + "uniform vec3 uSunColor;\n"
+                    + "uniform float uShadowTexel;\n"
+                    + "uniform float uShadowBias;\n"
+                    + "uniform int uEnhanced;\n"
+                    + "uniform vec3 uSkyLow;\n"
+                    + "uniform vec3 uSkyHigh;\n"
+                    + "uniform vec3 uGroundColor;\n"
+                    // Percentage-closer filtering: four taps in a rotated grid is
+                    // enough to take the staircase off a shadow edge on a phone.
+                    + "float shadowFactor(vec3 world, float ndl) {\n"
+                    + "  if (uEnhanced == 0) return 1.0;\n"
+                    + "  vec4 lightPos = uLightViewProj * vec4(world, 1.0);\n"
+                    + "  vec3 proj = lightPos.xyz / lightPos.w * 0.5 + 0.5;\n"
+                    + "  if (proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0\n"
+                    + "      || proj.z > 1.0) return 1.0;\n"
+                    + "  // Slope-scaled bias, or shallow surfaces self-shadow into stripes.\n"
+                    + "  // uShadowBias carries one texel of depth, so the same numbers\n"
+                    + "  // hold whatever the map size or the shadow resolution.\n"
+                    + "  float bias = mix(3.0, 0.75, ndl) * uShadowBias;\n"
+                    + "  float lit = 0.0;\n"
+                    + "  for (int i = 0; i < 4; i++) {\n"
+                    + "    vec2 offset = vec2(i == 0 ? -0.7 : (i == 1 ? 0.7 : (i == 2 ? -0.3 : 0.3)),\n"
+                    + "                       i == 0 ? -0.3 : (i == 1 ? 0.3 : (i == 2 ? 0.7 : -0.7)));\n"
+                    + "    float depth = texture(uShadowMap, proj.xy + offset * uShadowTexel).r;\n"
+                    + "    lit += proj.z - bias <= depth ? 1.0 : 0.0;\n"
+                    + "  }\n"
+                    + "  return lit * 0.25;\n"
+                    + "}\n"
+                    // Reflections come from an analytic environment rather than a
+                    // captured probe: sky above, level colour below, sun disc.
+                    + "vec3 environment(vec3 dir) {\n"
+                    + "  float up = clamp(dir.z * 0.5 + 0.5, 0.0, 1.0);\n"
+                    + "  vec3 col = mix(uGroundColor, mix(uSkyLow, uSkyHigh, up), smoothstep(0.42, 0.58, up));\n"
+                    + "  float sun = max(0.0, dot(dir, -uSunDir));\n"
+                    + "  col += uSunColor * pow(sun, 48.0) * 3.0;\n"
+                    + "  return col;\n"
+                    + "}\n"
+                    + "float fresnel(float cosTheta, float f0) {\n"
+                    + "  return f0 + (1.0 - f0) * pow(1.0 - clamp(cosTheta, 0.0, 1.0), 5.0);\n"
+                    + "}\n"
+                    // Roughness per world material: polished floors mirror, concrete does not.
+                    + "float materialGloss(int layer) {\n"
+                    + "  if (layer == 3) return 0.72;\n"      // floor metal
+                    + "  if (layer == 13) return 0.62;\n"     // dark metal
+                    + "  if (layer == 0 || layer == 1) return 0.38;\n"  // tech and panel walls
+                    + "  if (layer == 6) return 0.55;\n"      // brass trim
+                    + "  if (layer == 4) return 0.30;\n"      // grating
+                    + "  if (layer == 11 || layer == 12) return 0.65;\n" // pads
+                    + "  return 0.12;\n"
+                    + "}\n";
+
     // ------------------------------------------------------------------ world
 
     public static final String WORLD_VS =
@@ -26,18 +86,21 @@ public final class Shaders {
                     + "layout(location = 1) in vec3 aNormal;\n"
                     + "layout(location = 2) in vec2 aUV;\n"
                     + "layout(location = 3) in vec3 aLight;\n"
-                    + "layout(location = 4) in float aLayer;\n"
+                    + "layout(location = 4) in float aOcclusion;\n"
+                    + "layout(location = 5) in float aLayer;\n"
                     + "uniform mat4 uViewProj;\n"
                     + "out vec3 vWorld;\n"
                     + "out vec3 vNormal;\n"
                     + "out vec2 vUV;\n"
                     + "out vec3 vLight;\n"
+                    + "out float vOcclusion;\n"
                     + "flat out int vLayer;\n"
                     + "void main() {\n"
                     + "  vWorld = aPos;\n"
                     + "  vNormal = aNormal;\n"
                     + "  vUV = aUV;\n"
                     + "  vLight = aLight;\n"
+                    + "  vOcclusion = aOcclusion;\n"
                     + "  vLayer = int(aLayer + 0.5);\n"
                     + "  gl_Position = uViewProj * vec4(aPos, 1.0);\n"
                     + "}\n";
@@ -50,6 +113,7 @@ public final class Shaders {
                     + "in vec3 vNormal;\n"
                     + "in vec2 vUV;\n"
                     + "in vec3 vLight;\n"
+                    + "in float vOcclusion;\n"
                     + "flat in int vLayer;\n"
                     + "uniform sampler2DArray uTex;\n"
                     + "uniform vec3 uEye;\n"
@@ -59,11 +123,18 @@ public final class Shaders {
                     + "uniform vec4 uLightPos[" + MAX_DYNAMIC_LIGHTS + "];\n"
                     + "uniform vec3 uLightColor[" + MAX_DYNAMIC_LIGHTS + "];\n"
                     + "out vec4 fragColor;\n"
+                    + LIGHTING_COMMON
                     + FOG_AND_OUT
                     + "void main() {\n"
                     + "  vec3 albedo = texture(uTex, vec3(vUV, float(vLayer))).rgb;\n"
                     + "  vec3 n = normalize(vNormal);\n"
+                    + "  vec3 viewDir = normalize(uEye - vWorld);\n"
                     + "  vec3 light = vLight;\n"
+                    + "  // Sunlight is applied here, not baked, so it can be shadowed.\n"
+                    + "  float ndl = max(0.0, dot(n, -uSunDir));\n"
+                    + "  if (ndl > 0.0) {\n"
+                    + "    light += uSunColor * ndl * vOcclusion * shadowFactor(vWorld, ndl);\n"
+                    + "  }\n"
                     + "  for (int i = 0; i < uLightCount; i++) {\n"
                     + "    vec3 d = uLightPos[i].xyz - vWorld;\n"
                     + "    float dist = length(d);\n"
@@ -75,8 +146,20 @@ public final class Shaders {
                     + "      light += uLightColor[i] * (lam * 0.85 + 0.15) * atten;\n"
                     + "    }\n"
                     + "  }\n"
+                    + "  vec3 color = albedo * light;\n"
+                    + "  if (uEnhanced == 1) {\n"
+                    + "    // Specular from the sun, plus a reflection of the environment\n"
+                    + "    // weighted by Fresnel — grazing angles mirror, head-on does not.\n"
+                    + "    float gloss = materialGloss(vLayer);\n"
+                    + "    vec3 h = normalize(viewDir - uSunDir);\n"
+                    + "    float spec = pow(max(0.0, dot(n, h)), mix(8.0, 220.0, gloss));\n"
+                    + "    color += uSunColor * spec * gloss * 2.2 * shadowFactor(vWorld, ndl);\n"
+                    + "    vec3 refl = environment(reflect(-viewDir, n));\n"
+                    + "    float f = fresnel(dot(n, viewDir), 0.02 + gloss * 0.06);\n"
+                    + "    color = mix(color, refl * (0.35 + albedo * 0.65), f * gloss * vOcclusion);\n"
+                    + "  }\n"
                     + "  float dist = distance(vWorld, uEye);\n"
-                    + "  fragColor = present(applyFog(albedo * light, dist));\n"
+                    + "  fragColor = present(applyFog(color, dist));\n"
                     + "}\n";
 
     // -------------------------------------------------------------------- sky
@@ -205,11 +288,15 @@ public final class Shaders {
                     + "uniform int uLightCount;\n"
                     + "uniform vec4 uLightPos[" + MAX_DYNAMIC_LIGHTS + "];\n"
                     + "uniform vec3 uLightColor[" + MAX_DYNAMIC_LIGHTS + "];\n"
+                    + "uniform float uGloss;\n"
                     + "out vec4 fragColor;\n"
+                    + LIGHTING_COMMON
                     + FOG_AND_OUT
                     + "void main() {\n"
                     + "  vec3 n = normalize(vNormal);\n"
+                    + "  vec3 viewDir = normalize(uEye - vWorld);\n"
                     + "  float key = max(0.0, dot(n, -uKeyDir));\n"
+                    + "  key *= shadowFactor(vWorld, key);\n"
                     + "  // A dim opposing fill keeps the unlit side from going flat black.\n"
                     + "  float fill = max(0.0, dot(n, uKeyDir)) * 0.35;\n"
                     + "  vec3 light = uAmbient + uKeyColor * key + uAmbient * fill;\n"
@@ -228,6 +315,14 @@ public final class Shaders {
                     + "  float detail = texture(uTex, vec3(vUV, float(vMaterial))).r;\n"
                     + "  vec3 base = vColor * uTint * (detail * 1.35);\n"
                     + "  vec3 color = mix(base * light, base, uEmissive);\n"
+                    + "  if (uEnhanced == 1 && uEmissive < 0.5) {\n"
+                    + "    vec3 h = normalize(viewDir - uKeyDir);\n"
+                    + "    float spec = pow(max(0.0, dot(n, h)), mix(10.0, 180.0, uGloss));\n"
+                    + "    color += uKeyColor * spec * uGloss * 1.8;\n"
+                    + "    vec3 refl = environment(reflect(-viewDir, n));\n"
+                    + "    float f = fresnel(dot(n, viewDir), 0.03 + uGloss * 0.05);\n"
+                    + "    color = mix(color, refl * (0.3 + base * 0.7), f * uGloss * 0.85);\n"
+                    + "  }\n"
                     + "  float dist = distance(vWorld, uEye);\n"
                     + "  vec4 outColor = present(applyFog(color, dist));\n"
                     + "  outColor.a = uAlpha;\n"
@@ -273,6 +368,30 @@ public final class Shaders {
                     + "            * uFogAmount;\n"
                     + "  color = mix(color, uFogColor, f);\n"
                     + "  fragColor = vec4(sqrt(clamp(color, 0.0, 1.0)), vColor.a * mask);\n"
+                    + "}\n";
+
+    // ------------------------------------------------------------------ depth
+
+    /**
+     * Depth-only pass that fills the shadow map. It declares nothing but the
+     * position, so the same program works for world geometry and models even
+     * though their vertex layouts differ.
+     */
+    public static final String DEPTH_VS =
+            "#version 300 es\n"
+                    + "layout(location = 0) in vec3 aPos;\n"
+                    + "uniform mat4 uViewProj;\n"
+                    + "uniform mat4 uModel;\n"
+                    + "void main() {\n"
+                    + "  gl_Position = uViewProj * (uModel * vec4(aPos, 1.0));\n"
+                    + "}\n";
+
+    public static final String DEPTH_FS =
+            "#version 300 es\n"
+                    + "precision mediump float;\n"
+                    + "out vec4 fragColor;\n"
+                    + "void main() {\n"
+                    + "  fragColor = vec4(1.0);\n"
                     + "}\n";
 
     // -------------------------------------------------------------------- hud

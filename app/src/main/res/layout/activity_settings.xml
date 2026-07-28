@@ -71,6 +71,8 @@
                 <Switch android:id="@+id/sw_fps" style="@style/SettingRow" android:text="@string/show_fps" />
                 <Switch android:id="@+id/sw_haptics" style="@style/SettingRow" android:text="@string/haptics" />
                 <Switch android:id="@+id/sw_zones" style="@style/SettingRow" android:text="@string/gyro_aim" />
+                <Switch android:id="@+id/sw_enhanced" style="@style/SettingRow" android:text="@string/enhanced_lighting" />
+                <Switch android:id="@+id/sw_sharpshadows" style="@style/SettingRow" android:text="@string/sharp_shadows" />
             </LinearLayout>
         </LinearLayout>
 

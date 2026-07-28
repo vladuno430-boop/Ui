@@ -120,6 +120,31 @@ public final class Settings {
         return prefs.getBoolean("zones", false);
     }
 
+    /**
+     * Real-time shadows, specular highlights and environment reflections. Costs
+     * an extra geometry pass, so it can be turned off on slower devices.
+     */
+    public boolean enhancedLighting() {
+        return prefs.getBoolean("enhanced", true);
+    }
+
+    public void setEnhancedLighting(boolean v) {
+        prefs.edit().putBoolean("enhanced", v).apply();
+    }
+
+    /** Shadow map edge length; the higher setting is sharper but slower. */
+    public int shadowResolution() {
+        return prefs.getBoolean("sharpshadows", false) ? 2048 : 1024;
+    }
+
+    public boolean sharpShadows() {
+        return prefs.getBoolean("sharpshadows", false);
+    }
+
+    public void setSharpShadows(boolean v) {
+        prefs.edit().putBoolean("sharpshadows", v).apply();
+    }
+
     public void setShowZones(boolean v) {
         prefs.edit().putBoolean("zones", v).apply();
     }

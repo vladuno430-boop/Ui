@@ -55,6 +55,10 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
 
     private Textures textures;
     private ShaderProgram worldProgram, skyProgram, modelProgram, particleProgram, hudProgram;
+    private ShaderProgram depthProgram;
+    private final ShadowMap shadowMap = new ShadowMap();
+    private boolean enhanced;
+    private final Mat4 identity = new Mat4();
     private SpriteBatch sprites;
 
     private Mesh worldMesh, skyMesh, particleMesh;
@@ -147,6 +151,7 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         modelProgram = new ShaderProgram(Shaders.MODEL_VS, Shaders.MODEL_FS, "model");
         particleProgram = new ShaderProgram(Shaders.PARTICLE_VS, Shaders.PARTICLE_FS, "particle");
         hudProgram = new ShaderProgram(Shaders.HUD_VS, Shaders.HUD_FS, "hud");
+        depthProgram = new ShaderProgram(Shaders.DEPTH_VS, Shaders.DEPTH_FS, "depth");
         sprites = new SpriteBatch(hudProgram, textures);
 
         buildWorldMeshes();
@@ -155,22 +160,38 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         particleMesh = new Mesh(new int[]{3, 2, 4}, true, MAX_PARTICLE_QUADS * 4);
         particleMesh.uploadIndices(Mesh.quadIndices(MAX_PARTICLE_QUADS), MAX_PARTICLE_QUADS * 6);
 
+        // Real-time shadows and reflections are optional: if the device cannot
+        // give us a depth target, everything falls back to the baked lighting.
+        enhanced = settings.enhancedLighting();
+        if (enhanced) {
+            enhanced = shadowMap.create(settings.shadowResolution());
+            if (enhanced) {
+                shadowMap.fit(worldBoundsMin, worldBoundsMax, world.map.sunDir);
+            }
+        }
+
         hud.reset();
         lastFrameNanos = 0;
     }
+
+    private final Vec3 worldBoundsMin = new Vec3();
+    private final Vec3 worldBoundsMax = new Vec3();
 
     private void buildWorldMeshes() {
         WorldGeometry geometry = new WorldGeometry();
         geometry.build(world.map, world.collision);
 
-        worldMesh = new Mesh(new int[]{3, 3, 2, 3, 1}, false, 0);
+        worldMesh = new Mesh(new int[]{3, 3, 2, 3, 1, 1}, false, 0);
         worldMesh.upload(geometry.verts, geometry.vertexCount * WorldGeometry.VERTEX_FLOATS,
                 geometry.indices, geometry.indexCount);
 
         // The sky pass only needs positions, but it shares the vertex layout.
-        skyMesh = new Mesh(new int[]{3, 3, 2, 3, 1}, false, 0);
+        skyMesh = new Mesh(new int[]{3, 3, 2, 3, 1, 1}, false, 0);
         skyMesh.upload(geometry.skyVerts, geometry.skyVertexCount * WorldGeometry.VERTEX_FLOATS,
                 geometry.skyIndices, geometry.skyIndexCount);
+
+        worldBoundsMin.set(geometry.boundsMin);
+        worldBoundsMax.set(geometry.boundsMax);
     }
 
     private void buildModelMeshes() {
@@ -502,6 +523,8 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         setupCamera();
         collectLights();
 
+        if (enhanced && shadowMap.isValid()) drawShadowPass();
+
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
         GLES30.glEnable(GLES30.GL_DEPTH_TEST);
         GLES30.glDepthMask(true);
@@ -512,6 +535,58 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         drawEntities();
         drawEffects();
         drawViewModel();
+    }
+
+    /** Fills the shadow map with everything that can cast: level and fighters. */
+    private void drawShadowPass() {
+        shadowMap.beginPass();
+        depthProgram.use();
+        depthProgram.setMatrix("uViewProj", shadowMap.lightViewProj.m);
+        depthProgram.setMatrix("uModel", identity.m);
+        worldMesh.draw();
+
+        for (PlayerState ps : world.players) {
+            if (!ps.alive) continue;
+            FighterPose.compute(ps, poseMatrices);
+            for (int i = 0; i < Models.PART_COUNT; i++) {
+                depthProgram.setMatrix("uModel", poseMatrices[i].m);
+                fighterParts[i].draw();
+            }
+        }
+        shadowMap.endPass(viewWidth, viewHeight);
+    }
+
+    /** Uniforms shared by the world and model passes for shadows and reflections. */
+    private void applyLightingUniforms(ShaderProgram program) {
+        MapDef map = world.map;
+        program.set("uEnhanced", enhanced && shadowMap.isValid() ? 1 : 0);
+        program.set("uSunDir", map.sunDir.x, map.sunDir.y, map.sunDir.z);
+        program.set("uSunColor", map.sunColor.x, map.sunColor.y, map.sunColor.z);
+        // The analytic environment the reflections sample.
+        switch (map.skyStyle) {
+            case 1:
+                program.set("uSkyLow", 0.30f, 0.09f, 0.05f);
+                program.set("uSkyHigh", 0.05f, 0.03f, 0.05f);
+                break;
+            case 2:
+                program.set("uSkyLow", 0.03f, 0.03f, 0.07f);
+                program.set("uSkyHigh", 0.01f, 0.01f, 0.03f);
+                break;
+            default:
+                program.set("uSkyLow", 0.09f, 0.11f, 0.17f);
+                program.set("uSkyHigh", 0.02f, 0.03f, 0.07f);
+                break;
+        }
+        program.set("uGroundColor", map.ambient.x * 1.6f, map.ambient.y * 1.6f, map.ambient.z * 1.6f);
+        if (enhanced && shadowMap.isValid()) {
+            program.setMatrix("uLightViewProj", shadowMap.lightViewProj.m);
+            program.set("uShadowTexel", shadowMap.texelSize());
+            program.set("uShadowBias", shadowMap.depthBiasUnit());
+            program.set("uShadowMap", 3);
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE3);
+            GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, shadowMap.texture());
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
+        }
     }
 
     private void collectLights() {
@@ -567,6 +642,7 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         worldProgram.set("uFogColor", map.fogColor.x, map.fogColor.y, map.fogColor.z);
         worldProgram.set("uFogRange", map.fogNear, map.fogFar);
         applyLightUniforms(worldProgram);
+        applyLightingUniforms(worldProgram);
 
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D_ARRAY, textures.worldArray);
@@ -598,7 +674,9 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         modelProgram.set("uEmissive", 0f);
         modelProgram.set("uAlpha", 1f);
         modelProgram.set("uTex", 0);
+        modelProgram.set("uGloss", 0.45f);
         applyLightUniforms(modelProgram);
+        applyLightingUniforms(modelProgram);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D_ARRAY, textures.modelArray);
     }
@@ -729,7 +807,9 @@ public final class GameRenderer implements GLSurfaceView.Renderer {
         modelProgram.set("uEmissive", 0f);
         modelProgram.set("uAlpha", 1f);
         modelProgram.set("uTex", 0);
+        modelProgram.set("uGloss", 0.55f);
         applyLightUniforms(modelProgram);
+        applyLightingUniforms(modelProgram);
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D_ARRAY, textures.modelArray);
 

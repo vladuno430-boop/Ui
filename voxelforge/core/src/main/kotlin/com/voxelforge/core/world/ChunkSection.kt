@@ -149,9 +149,17 @@ class ChunkSection {
 
     // --- Освещение ---
 
-    /** Солнечный свет 0..15 (старший полубайт). */
+    /**
+     * Солнечный свет 0..15 (старший полубайт).
+     *
+     * Отсутствие массива означает **темноту**, а не открытое небо. Обратное
+     * умолчание кажется удобным для ещё не освещённых чанков, но приводит
+     * к тому, что вся неосвещённая толща под землёй считается залитой
+     * солнцем. Вопрос «открыто ли здесь небо» решается по карте высот
+     * на уровне [Chunk], где эта карта доступна.
+     */
     fun getSkyLight(x: Int, y: Int, z: Int): Int {
-        val l = light ?: return MAX_LIGHT   // нет данных — считаем открытым небом
+        val l = light ?: return 0
         return (l[sectionIndex(x, y, z)].toInt() shr 4) and 0xF
     }
 
@@ -180,7 +188,7 @@ class ChunkSection {
     }
 
     fun getLightPacked(index: Int): Int {
-        val l = light ?: return MAX_LIGHT shl 4
+        val l = light ?: return 0
         return l[index].toInt() and 0xFF
     }
 

@@ -165,12 +165,21 @@ class Chunk(val pos: ChunkPos) {
 
     // --- Освещение ---
 
+    /**
+     * Солнечная освещённость.
+     *
+     * Если данных освещения ещё нет (секция пуста либо чанк только что
+     * сгенерирован), ответ выводится из карты высот: выше поверхности —
+     * открытое небо, ниже — темнота. Именно здесь, а не в [ChunkSection],
+     * потому что только чанк знает карту высот.
+     */
     fun getSkyLight(x: Int, y: Int, z: Int): Int {
-        // Выше мира всегда открытое небо, ниже — темнота коренной породы.
         if (y > MAX_Y) return WorldConstants.MAX_LIGHT
         if (y < 0) return 0
         val section = sections[y shr SECTION_SHIFT]
-            ?: return if (y >= heightMap[columnIndex(x, z)]) WorldConstants.MAX_LIGHT else 0
+        if (section == null || section.light == null) {
+            return if (y >= heightMap[columnIndex(x, z)]) WorldConstants.MAX_LIGHT else 0
+        }
         return section.getSkyLight(x, y and SECTION_MASK, z)
     }
 

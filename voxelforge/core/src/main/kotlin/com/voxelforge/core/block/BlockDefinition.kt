@@ -110,7 +110,16 @@ class BlockDefinition(
     /** Сколько предметов выпадает. */
     @JvmField val dropCount: Int,
     /** Высота коллайдера: снег и жидкости ниже полного блока. */
-    @JvmField val collisionHeight: Double
+    @JvmField val collisionHeight: Double,
+    /**
+     * Ширина «крестика» в шестнадцатых долях блока (для [BlockShape.CROSS]).
+     * У травы это полная ширина, у факела — узкая полоска, благодаря чему
+     * один и тот же механизм отрисовки даёт две разные по силуэту вещи
+     * без отдельного кода для каждой.
+     */
+    @JvmField val crossWidth: Int,
+    /** Высота «крестика» в шестнадцатых долях блока. */
+    @JvmField val crossHeight: Int
 ) {
 
     /** Текстурный слой конкретной грани. */
@@ -148,6 +157,8 @@ class BlockDefinition(
         private var dropBlockId: Int = -2   // -2 = «выпадает сам собой»
         private var dropCount: Int = 1
         private var collisionHeight: Double = 1.0
+        private var crossWidth: Int = 16
+        private var crossHeight: Int = 16
 
         fun name(v: String) = apply { displayName = v }
         fun shape(v: BlockShape) = apply { shape = v }
@@ -163,6 +174,9 @@ class BlockDefinition(
         fun drops(blockId: Int, count: Int = 1) = apply { dropBlockId = blockId; dropCount = count }
         fun dropsNothing() = apply { dropBlockId = -1 }
         fun collisionHeight(v: Double) = apply { collisionHeight = v }
+
+        /** Габариты «крестика» в шестнадцатых долях блока. */
+        fun cross(width: Int, height: Int) = apply { crossWidth = width; crossHeight = height }
 
         /** Одна текстура на все шесть граней — самый частый случай. */
         fun allTiles(tile: Int) = apply {
@@ -203,7 +217,9 @@ class BlockDefinition(
                 iconTile = if (iconTile < 0) 0 else iconTile,
                 dropBlockId = resolvedDrop,
                 dropCount = dropCount,
-                collisionHeight = collisionHeight
+                collisionHeight = collisionHeight,
+                crossWidth = crossWidth,
+                crossHeight = crossHeight
             )
         }
     }

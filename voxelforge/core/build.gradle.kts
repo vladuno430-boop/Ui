@@ -38,3 +38,12 @@ tasks.test {
         System.getProperty(key)?.let { systemProperty(key, it) }
     }
 }
+
+tasks.test {
+    // Вывод println из интеграционных тестов виден в логе сборки:
+    // замеры производительности бессмысленны, если их не видно.
+    testLogging {
+        showStandardStreams = true
+        events("failed")
+    }
+}

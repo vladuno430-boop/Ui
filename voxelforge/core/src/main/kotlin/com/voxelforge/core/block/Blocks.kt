@@ -176,7 +176,8 @@ object Blocks {
                 .allTiles(Tiles.TORCH)
                 .shape(BlockShape.CROSS).layer(RenderLayer.CUTOUT)
                 .solid(false).opaque(false).opacity(0)
-                .emission(14).hardness(0.05f).build()
+                .emission(14).hardness(0.05f)
+                .cross(6, 10).build()
         )
 
         register(
@@ -318,7 +319,15 @@ object Blocks {
      */
     fun hidesFace(self: Int, neighbour: Int): Boolean {
         if (OPAQUE[neighbour]) return true
-        if (neighbour == self && LAYER[neighbour] == RenderLayer.TRANSLUCENT) return true
+        if (neighbour != self) return false
+        // Два одинаковых полупрозрачных блока не рисуют разделяющую грань:
+        // иначе внутри стеклянного куба видна сетка, а под водой экран
+        // превращается в кашу из наложенных полупрозрачных слоёв.
+        if (LAYER[neighbour] == RenderLayer.TRANSLUCENT) return true
+        // То же для смыкающихся вырезаемых кубов — прежде всего листвы.
+        // Крона среднего дерева содержит около 60 блоков листвы; без этого
+        // правила она порождает под тысячу невидимых внутренних граней.
+        if (LAYER[neighbour] == RenderLayer.CUTOUT && SHAPE[neighbour] == BlockShape.CUBE) return true
         return false
     }
 }

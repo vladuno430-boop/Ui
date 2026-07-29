@@ -28,3 +28,13 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+/*
+ * Пробрасываем системные свойства визуализатора из командной строки Gradle
+ * в JVM тестов — иначе -Dvoxelforge.visual.out не дойдёт до forked-процесса.
+ */
+tasks.test {
+    listOf("voxelforge.visual.out", "voxelforge.visual.seed").forEach { key ->
+        System.getProperty(key)?.let { systemProperty(key, it) }
+    }
+}

@@ -78,6 +78,9 @@ class FractalNoise(
     fun fbm2D01(x: Float, y: Float, frequency: Float): Float =
         fbm2D(x, y, frequency) * 0.5f + 0.5f
 
+    fun fbm3D01(x: Float, y: Float, z: Float, frequency: Float): Float =
+        fbm3D(x, y, z, frequency) * 0.5f + 0.5f
+
     /**
      * Ridged-шум: берём модуль шума и инвертируем.
      *

@@ -105,12 +105,15 @@ class AABB(
         // не могут столкнуться при движении вдоль X.
         if (o.maxY <= minY || o.minY >= maxY) return offset
         if (o.maxZ <= minZ || o.minZ >= maxZ) return offset
-        if (offset > 0.0 && o.maxX <= minX) {
-            val d = minX - o.maxX
+        // Движение в плюс упирается в препятствие, лежащее справа:
+        // его ближняя грань (minX) должна быть не левее нашей дальней (maxX).
+        if (offset > 0.0 && o.minX >= maxX) {
+            val d = o.minX - maxX
             if (d < offset) return d
         }
-        if (offset < 0.0 && o.minX >= maxX) {
-            val d = maxX - o.minX
+        // Движение в минус упирается в препятствие слева.
+        if (offset < 0.0 && o.maxX <= minX) {
+            val d = o.maxX - minX
             if (d > offset) return d
         }
         return offset
@@ -119,12 +122,16 @@ class AABB(
     fun clipYCollide(o: AABB, offset: Double): Double {
         if (o.maxX <= minX || o.minX >= maxX) return offset
         if (o.maxZ <= minZ || o.minZ >= maxZ) return offset
-        if (offset > 0.0 && o.maxY <= minY) {
-            val d = minY - o.maxY
+        // Подъём упирается в потолок — блок, чей низ выше нашего верха.
+        if (offset > 0.0 && o.minY >= maxY) {
+            val d = o.minY - maxY
             if (d < offset) return d
         }
-        if (offset < 0.0 && o.minY >= maxY) {
-            val d = maxY - o.minY
+        // Падение упирается в пол — блок, чей верх ниже наших ног.
+        // Это самая важная ветка во всей физике: ошибка здесь означает
+        // проваливание сквозь мир, а не косметический дефект.
+        if (offset < 0.0 && o.maxY <= minY) {
+            val d = o.maxY - minY
             if (d > offset) return d
         }
         return offset
@@ -133,12 +140,12 @@ class AABB(
     fun clipZCollide(o: AABB, offset: Double): Double {
         if (o.maxX <= minX || o.minX >= maxX) return offset
         if (o.maxY <= minY || o.minY >= maxY) return offset
-        if (offset > 0.0 && o.maxZ <= minZ) {
-            val d = minZ - o.maxZ
+        if (offset > 0.0 && o.minZ >= maxZ) {
+            val d = o.minZ - maxZ
             if (d < offset) return d
         }
-        if (offset < 0.0 && o.minZ >= maxZ) {
-            val d = maxZ - o.minZ
+        if (offset < 0.0 && o.maxZ <= minZ) {
+            val d = o.maxZ - minZ
             if (d > offset) return d
         }
         return offset

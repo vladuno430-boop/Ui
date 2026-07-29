@@ -55,10 +55,16 @@ android {
 }
 
 dependencies {
+    /*
+     * Единственная зависимость — модуль игровой логики.
+     *
+     * Библиотеки AndroidX сознательно не подключены: игра не использует
+     * ни одного их элемента (весь интерфейс рисуется в OpenGL), а их
+     * подключение означало бы лишние мегабайты в APK, лишние сотни
+     * миллисекунд инициализации на старте и дополнительные точки отказа
+     * на нестандартных прошивках.
+     */
     implementation(project(":core"))
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("androidx.activity:activity-ktx:1.9.3")
 }
 
 /*
@@ -66,3 +72,22 @@ dependencies {
  * проект целиком на Kotlin, и каталог java вводил бы в заблуждение.
  */
 android.sourceSets["main"].java.srcDirs("src/main/kotlin")
+android.sourceSets["test"].java.srcDirs("src/test/kotlin")
+
+dependencies {
+    testImplementation(kotlin("test"))
+}
+
+/*
+ * Юнит-тесты модуля :app выполняются на обычной JVM — в них проверяется
+ * только код, не зависящий от Android. Главный из таких тестов —
+ * компиляция шейдеров эталонным валидатором Khronos: ошибка в шейдере
+ * иначе проявляется лишь чёрным экраном на устройстве.
+ */
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+        events("failed")
+    }
+}

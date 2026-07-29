@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Иконка приложения — векторная и нарисована с нуля: изометрический
+  травяной блок. Векторный формат выбран сознательно, чтобы в репозитории
+  не было ни одного бинарного графического ресурса; всё, что видит игрок,
+  либо описано разметкой, либо сгенерировано кодом.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="#0B0E14"
+        android:pathData="M0,0h108v108h-108z" />
+
+    <!-- Верхняя грань — трава -->
+    <path
+        android:fillColor="#6FBF4A"
+        android:pathData="M54,20L88,38L54,56L20,38z" />
+    <!-- Левая грань — земля в тени -->
+    <path
+        android:fillColor="#6B4A2F"
+        android:pathData="M20,38L54,56L54,88L20,70z" />
+    <!-- Правая грань — земля -->
+    <path
+        android:fillColor="#8A6039"
+        android:pathData="M88,38L88,70L54,88L54,56z" />
+    <!-- Полоска дёрна на правой грани -->
+    <path
+        android:fillColor="#57A03C"
+        android:pathData="M88,38L88,46L54,64L54,56z" />
+    <!-- Полоска дёрна на левой грани -->
+    <path
+        android:fillColor="#478030"
+        android:pathData="M20,38L54,56L54,64L20,46z" />
+</vector>

@@ -8,8 +8,13 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: manga-release-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   publish:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Check out assembly branch
@@ -31,8 +36,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gh release create "manga-pages-01-20-20260811" \
-            "dist/manga_color_pages_01-20.zip#Color manga pages 01-20" \
-            --target "${GITHUB_SHA}" \
-            --title "Color manga pages 01-20" \
-            --notes "20 full-resolution color manga pages in one ZIP archive."
+          tag="manga-pages-01-20-20260811"
+          asset="dist/manga_color_pages_01-20.zip#Color manga pages 01-20"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$asset" --clobber
+          else
+            gh release create "$tag" "$asset" \
+              --target "${GITHUB_SHA}" \
+              --title "Color manga pages 01-20" \
+              --notes "20 full-resolution color manga pages in one ZIP archive."
+          fi
+
+      - name: Commit downloadable archive to assembly branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p downloads
+          cp dist/manga_color_pages_01-20.zip downloads/manga_color_pages_01-20.zip
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add downloads/manga_color_pages_01-20.zip
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish manga archive [skip ci]"
+            git push
+          fi

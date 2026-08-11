@@ -1,0 +1,38 @@
+name: Publish manga archive
+
+on:
+  push:
+    branches:
+      - agent/manga-download-20260811
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out assembly branch
+        uses: actions/checkout@v4
+
+      - name: Assemble and verify archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cat chunks/manga.part-* > dist/manga_color_pages_01-20.zip
+          expected="12053f6ec770b9eb2d64c3f2d083776b1eb8118e5f083d7644fe981770420dd5"
+          actual="$(sha256sum dist/manga_color_pages_01-20.zip | cut -d' ' -f1)"
+          test "$actual" = "$expected"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "manga-pages-01-20-20260811" \
+            "dist/manga_color_pages_01-20.zip#Color manga pages 01-20" \
+            --target "${GITHUB_SHA}" \
+            --title "Color manga pages 01-20" \
+            --notes "20 full-resolution color manga pages in one ZIP archive."
